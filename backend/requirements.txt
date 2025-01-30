@@ -1,0 +1,10 @@
+fastapi[standard]==0.115.3
+sqlmodel==0.0.22
+psycopg2==2.9.10
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+alembic==1.13.3
+alembic-postgresql-enum==1.4.0
+pre-commit==4.0.1
+fastapi-pagination==0.12.32
+reportlab==4.2.5

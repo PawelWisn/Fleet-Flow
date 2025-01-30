@@ -1,0 +1,13 @@
+SECRET_KEY=secret_key_for_develepment
+DB_NAME=fleetflow
+DB_USER=admin
+DB_PASSWORD=password
+DB_HOST=db
+DB_PORT=5432
+DB_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+BE_PORT=8000
+FE_PORT=7050
+DOMAIN=localhost
+PROTOCOL=http
+TIMEZONE=Europe/Warsaw
+ACCESS_TOKEN_EXPIRE_MINUTES=180
