@@ -1,9 +1,9 @@
-from permissions import require_role
 from commons import Page, get_filters, get_from_qs_or_404, get_user, raise_perm_error, raise_validation_error, validate_obj_reference
 from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from fastapi import APIRouter, HTTPException, Query, Response, status
 from fastapi_pagination.ext.sqlalchemy import paginate
+from permissions import require_role
 from sqlalchemy.sql import Select
 from sqlmodel import select
 
@@ -36,9 +36,9 @@ async def create_user(
     request_user: LoginReqDep,
     response: Response,
 ) -> UserRead:
-    if (request_user.role == UserRole.MANAGER and user.role != UserRole.WORKER):
+    if request_user.role == UserRole.MANAGER and user.role != UserRole.WORKER:
         raise_perm_error(user.model_dump())
-        
+
     if get_user(session, user.email):
         raise_validation_error("This email has already been taken.", user.model_dump())
     validate_obj_reference(session, user, Company, user.company_id)

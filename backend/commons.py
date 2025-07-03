@@ -94,6 +94,7 @@ def validate_company_reference(session: Session, referencing_obj: T, request_use
     if (request_user.is_worker or request_user.is_manager) and not referencing_obj.company_id == request_user.company_id:
         raise_perm_error(referencing_obj.model_dump(mode="json"))
 
+
 def get_all_subclasses(klass: Type[object]) -> list[Type]:
     subclasses = klass.__subclasses__()
     for subclass in subclasses:

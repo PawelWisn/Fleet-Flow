@@ -1,4 +1,4 @@
-from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference, validate_company_reference
+from commons import Page, get_filters, get_from_qs_or_404, validate_company_reference, validate_obj_reference
 from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from fastapi import APIRouter, Query, Response, status

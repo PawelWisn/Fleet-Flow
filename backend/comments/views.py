@@ -1,4 +1,4 @@
-from commons import Page, validate_user_reference, get_filters, get_from_qs_or_404, validate_obj_reference
+from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference, validate_user_reference
 from dependencies import LoginReqDep, SessionDep
 from fastapi import APIRouter, Query, Response, status
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -37,7 +37,7 @@ async def create_comment(
     validate_obj_reference(session, comment, Vehicle, comment.vehicle_id)
     validate_obj_reference(session, comment, User, comment.user_id)
     validate_user_reference(session, comment, request_user)
-    
+
     db_comment = Comment.model_validate(comment)
     session.add(db_comment)
     session.commit()

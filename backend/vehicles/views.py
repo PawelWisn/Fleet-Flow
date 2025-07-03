@@ -1,9 +1,9 @@
-from permissions import require_role
 from commons import Page, get_filters, get_from_qs_or_404, raise_perm_error, validate_company_reference, validate_obj_reference
 from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from fastapi import APIRouter, Query, Response, status
 from fastapi_pagination.ext.sqlalchemy import paginate
+from permissions import require_role
 from sqlalchemy.sql import Select
 from users.models import User, UserRole
 from vehicles.models import Vehicle, VehicleCreate, VehicleRead

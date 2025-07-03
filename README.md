@@ -16,7 +16,7 @@ Pull changes before pushing new ones
 
 # Pre-commit
 
-Consider using pre-commit feature for keeping code clean. It will automatically fix style issues on commit. Currently frontend is excluded from reformatting
+Consider using pre-commit feature for keeping code clean. It will automatically fix style issues on commit.
 
 Installation and usage:
 

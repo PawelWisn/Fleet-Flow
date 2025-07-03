@@ -1,29 +1,29 @@
-exclude: '^frontend/|^backend/alembic/versions/'
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-    -   id: check-yaml
-    -   id: check-docstring-first
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
-    -   id: pretty-format-json
-        args: ["--indent", "2", "--no-sort-keys"]
--   repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-    -   id: black
-        args: ["-l", "180"]
--   repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-    -   id: isort
-        args: ["-m", "3", "--profile", "black", "-l", "180"]
--   repo: local
-    hooks:
-    -   id: git-diff
-        name: git diff
-        entry: git diff --exit-code
-        language: system
-        pass_filenames: false
-        always_run: true
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v5.0.0
+      hooks:
+          - id: check-yaml
+          - id: check-docstring-first
+          - id: end-of-file-fixer
+          - id: trailing-whitespace
+          - id: pretty-format-json
+            exclude: ^frontend/.*\.json$
+            args: ["--indent", "2", "--no-sort-keys"]
+    - repo: https://github.com/psf/black
+      rev: 25.1.0
+      hooks:
+          - id: black
+            args: ["-l", "180"]
+    - repo: https://github.com/pycqa/isort
+      rev: 6.0.1
+      hooks:
+          - id: isort
+            args: ["-m", "3", "--profile", "black", "-l", "180"]
+    - repo: https://github.com/pre-commit/mirrors-prettier
+      rev: "v4.0.0-alpha.8"
+      hooks:
+          - id: prettier
+            files: \.(tsx|scss)$
+            additional_dependencies:
+                - prettier@3.5.3
+            args: ["--print-width", "120", "--use-tabs", "--object-wrap", "preserve"]

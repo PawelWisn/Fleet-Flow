@@ -1,6 +1,8 @@
 from functools import wraps
+
 from commons import raise_perm_error
 from users.models import UserRole
+
 
 def require_role(roles: list[UserRole]):
     def decorator(func):
@@ -10,5 +12,7 @@ def require_role(roles: list[UserRole]):
             if user.role not in roles:
                 raise_perm_error()
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
