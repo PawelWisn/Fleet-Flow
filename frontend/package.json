@@ -1,0 +1,39 @@
+{
+  "name": "fleet-flow-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8080",
+    "build": "next build",
+    "start": "next start -p 8080",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.3",
+    "tailwindcss": "^3.4.6",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "@headlessui/react": "^2.1.2",
+    "@heroicons/react": "^2.1.4",
+    "axios": "^1.7.2",
+    "react-hook-form": "^7.52.1",
+    "@hookform/resolvers": "^3.7.0",
+    "zod": "^3.23.8",
+    "react-query": "^3.39.3",
+    "date-fns": "^3.6.0",
+    "clsx": "^2.1.1",
+    "react-hot-toast": "^2.4.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5",
+    "@types/react-query": "^1.2.9"
+  }
+}

@@ -132,3 +132,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+.next/
+out/
+dist/
