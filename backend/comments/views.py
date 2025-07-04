@@ -1,6 +1,7 @@
-from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference, validate_user_reference
+from commons import get_filters, get_from_qs_or_404, validate_obj_reference, validate_user_reference
 from dependencies import LoginReqDep, SessionDep
 from fastapi import APIRouter, Query, Response, status
+from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.sql import Select
 from users.models import User
@@ -47,7 +48,7 @@ async def create_comment(
 
 
 @router.get("/{comment_id}/")
-async def retrive_comment(
+async def retrieve_comment(
     session: SessionDep,
     request_user: LoginReqDep,
     comment_id: int,
@@ -79,10 +80,8 @@ async def delete_comment(
     session: SessionDep,
     request_user: LoginReqDep,
     comment_id: int,
-    response: Response,
 ) -> None:
     qs = get_queryset(request_user)
     db_comment = get_from_qs_or_404(session, qs, comment_id)
     session.delete(db_comment)
     session.commit()
-    response.status_code = status.HTTP_204_NO_CONTENT

@@ -44,4 +44,4 @@ class CommentNestedRead(CommentBase):
 
 
 class CommentCreate(CommentBase):
-    pass
+    content: str = Field(min_length=1, max_length=1000, description="Comment content")

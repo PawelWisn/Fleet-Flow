@@ -91,16 +91,20 @@ async def delete_user(
     response.status_code = status.HTTP_204_NO_CONTENT
 
 
-@router.post("/login/", status_code=status.HTTP_204_NO_CONTENT)
-def login(session: SessionDep, response: Response, data: UserLogin) -> Response:
+@router.post("/login/")
+def login(session: SessionDep, response: Response, data: UserLogin) -> dict:
     user = get_user(session, data.email)
     if not user or not verify_password(data.password, user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     access_token = create_access_token(user.email)
 
-    response.set_cookie(key="token", value=access_token)
-    response.status_code = status.HTTP_204_NO_CONTENT
+    # Set cookie with the token
+    response.set_cookie(
+        key="token", value=access_token, httponly=True, secure=False, samesite="lax", max_age=3600  # Set to True in production with HTTPS  # 1 hour, matches token expiration
+    )
+
+    return {"access_token": access_token, "token_type": "bearer", "user": UserRead.model_validate(user)}
 
 
 @router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT)
