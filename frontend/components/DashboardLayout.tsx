@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-	HomeIcon,
 	TruckIcon,
 	UsersIcon,
 	BuildingOfficeIcon,
@@ -16,7 +15,6 @@ import {
 } from "@heroicons/react/24/outline";
 
 const navigation = [
-	{ name: "Dashboard", href: "/dashboard", icon: HomeIcon },
 	{ name: "Vehicles", href: "/vehicles", icon: TruckIcon },
 	{ name: "Reservations", href: "/reservations", icon: CalendarIcon },
 	{ name: "Users", href: "/users", icon: UsersIcon },
@@ -50,7 +48,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 					</div>
 					<div className="h-0 flex-1 overflow-y-auto pt-5 pb-4">
 						<div className="flex flex-shrink-0 items-center px-4">
-							<h1 className="text-xl font-bold text-primary-600">FleetFlow</h1>
+							<Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+								<h1 className="text-xl font-bold text-primary-600 cursor-pointer">FleetFlow</h1>
+							</Link>
 						</div>
 						<nav className="mt-5 space-y-1 px-2">
 							{navigation.map((item) => (
@@ -73,7 +73,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 				<div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
 					<div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
 						<div className="flex flex-shrink-0 items-center px-4">
-							<h1 className="text-2xl font-bold text-primary-600">FleetFlow</h1>
+							<Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+								<h1 className="text-2xl font-bold text-primary-600 cursor-pointer">FleetFlow</h1>
+							</Link>
 						</div>
 						<nav className="mt-5 flex-1 space-y-1 bg-white px-2">
 							{navigation.map((item) => (

@@ -13,11 +13,15 @@ export interface User {
 export interface Company {
   id: number;
   name: string;
-  address: string;
-  phone: string;
-  email: string;
-  created_at: string;
-  updated_at: string;
+  post_code: string;
+  address1: string;
+  address2: string;
+  city: string;
+  country: string;
+  nip: string;
+  vehicles?: Vehicle[];
+  contractors?: any[];
+  users?: User[];
 }
 
 export interface Vehicle {
@@ -184,4 +188,14 @@ export interface CreateRefuelForm {
   odometer: number;
   location: string;
   vehicle_id: number;
+}
+
+export interface CreateCompanyForm {
+  name: string;
+  post_code: string;
+  address1: string;
+  address2: string;
+  city: string;
+  country: string;
+  nip: string;
 }

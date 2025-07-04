@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
 import { vehiclesApi } from "@/services/api";
 import { Vehicle } from "@/types";
 import toast from "react-hot-toast";
@@ -22,6 +23,7 @@ export default function VehiclesPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
+	const router = useRouter();
 
 	// Fetch vehicles from API
 	useEffect(() => {
@@ -63,7 +65,7 @@ export default function VehiclesPage() {
 						<h1 className="text-2xl font-semibold text-gray-900">Vehicles</h1>
 						<p className="mt-2 text-sm text-gray-700">Manage your fleet vehicles and their status.</p>
 					</div>
-					<button className="btn-primary flex items-center">
+					<button onClick={() => router.push("/vehicles/add")} className="btn-primary flex items-center">
 						<PlusIcon className="h-5 w-5 mr-2" />
 						Add Vehicle
 					</button>
@@ -173,7 +175,7 @@ export default function VehiclesPage() {
 										<span>{vehicle.production_year}</span>
 									</div>
 									<div className="flex justify-between">
-										<span>Mileage:</span>
+										<span>Kilometrage:</span>
 										<span>{vehicle.kilometrage.toLocaleString()} km</span>
 									</div>
 									<div className="flex justify-between">
@@ -187,8 +189,15 @@ export default function VehiclesPage() {
 								</div>
 
 								<div className="mt-4 flex space-x-2">
-									<button className="btn-primary flex-1 text-sm">View Details</button>
-									<button className="btn-secondary flex-1 text-sm">Edit</button>
+									<button onClick={() => router.push(`/vehicles/${vehicle.id}`)} className="btn-primary flex-1 text-sm">
+										View Details
+									</button>
+									<button
+										onClick={() => router.push(`/vehicles/${vehicle.id}/edit`)}
+										className="btn-secondary flex-1 text-sm"
+									>
+										Edit
+									</button>
 								</div>
 							</div>
 						))}
@@ -208,7 +217,7 @@ export default function VehiclesPage() {
 									: "Try adjusting your search or filter criteria."}
 							</p>
 							{vehicles.length === 0 && (
-								<button className="btn-primary mt-4">
+								<button onClick={() => router.push("/vehicles/add")} className="btn-primary mt-4">
 									<PlusIcon className="h-5 w-5 mr-2" />
 									Add Your First Vehicle
 								</button>

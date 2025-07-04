@@ -12,6 +12,7 @@ import {
   Contractor,
   PaginatedResponse,
   CreateVehicleForm,
+  CreateCompanyForm,
   CreateReservationForm,
   CreateRefuelForm
 } from '@/types';
@@ -38,10 +39,10 @@ export const vehiclesApi = {
 // Companies API
 export const companiesApi = {
   getAll: (): Promise<PaginatedResponse<Company>> => api.get('/companies').then(res => res.data),
-  getById: (id: number): Promise<Company> => api.get(`/companies/${id}`).then(res => res.data),
-  create: (data: Partial<Company>): Promise<Company> => api.post('/companies', data).then(res => res.data),
-  update: (id: number, data: Partial<Company>): Promise<Company> => api.put(`/companies/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/companies/${id}`).then(res => res.data),
+  getById: (id: number): Promise<Company> => api.get(`/companies/${id}/`).then(res => res.data),
+  create: (data: CreateCompanyForm): Promise<Company> => api.post('/companies/', data).then(res => res.data),
+  update: (id: number, data: CreateCompanyForm): Promise<Company> => api.put(`/companies/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/companies/${id}/`).then(res => res.data),
 };
 
 // Reservations API
