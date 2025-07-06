@@ -26,11 +26,9 @@ class Reservation(ReservationBase, table=True):
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Reservation"]:
-        from users.models import User
-
         qs = select(cls)
         if not user.is_admin:
-            qs = qs.filter(cls.users.any(User.id == user.id))
+            qs = qs.filter(cls.user_id == user.id)
         return qs
 
     @classmethod

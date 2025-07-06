@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from database import SQLModel
-from documents.models import VehicleDocument
 from sqlalchemy.sql import Select
 from sqlmodel import Column
 from sqlmodel import Enum as EnumSQL
@@ -56,9 +55,9 @@ class VehicleBase(SQLModel):
 
 class Vehicle(VehicleBase, table=True):
     __tablename__ = "vehicles"
-    id: int | None = Field(primary_key=True, default=None)
+    id: Optional[int] = Field(primary_key=True, default=None)
     company: "Company" = Relationship(back_populates="vehicles")
-    documents: list["Document"] = Relationship(back_populates="vehicles", link_model=VehicleDocument)
+    documents: list["Document"] = Relationship(back_populates="vehicle", cascade_delete=True)
     refuels: list["Refuel"] = Relationship(back_populates="vehicle", cascade_delete=True)
     events: list["Event"] = Relationship(back_populates="vehicle", cascade_delete=True)
     reservations: list["Reservation"] = Relationship(back_populates="vehicle", cascade_delete=True)

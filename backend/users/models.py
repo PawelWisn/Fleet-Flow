@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from database import SQLModel
 from pydantic import field_validator, model_validator
@@ -11,6 +11,7 @@ from sqlmodel import Field, Relationship, select
 if TYPE_CHECKING:
     from comments.models import Comment, CommentNestedRead
     from companies.models import Company, CompanyNestedRead
+    from documents.models import Document
     from refuels.models import Refuel, RefuelNestedRead
     from reservations.models import Reservation, ReservationNestedRead
 
@@ -25,16 +26,17 @@ class UserBase(SQLModel):
     email: str = Field(max_length=64, unique=True)
     name: str = Field(max_length=128)
     role: UserRole = Field(sa_column=Column(EnumSQL(UserRole)))
-    company_id: int | None = Field(default=None, foreign_key="companies.id", ondelete="CASCADE")
+    company_id: Optional[int] = Field(default=None, foreign_key="companies.id", ondelete="CASCADE")
 
 
 class User(UserBase, table=True):
     __tablename__ = "users"
-    id: int | None = Field(primary_key=True, default=None)
+    id: Optional[int] = Field(primary_key=True, default=None)
     password: str = Field(max_length=128)
     refuels: list["Refuel"] = Relationship(back_populates="user", cascade_delete=True)
     reservations: list["Reservation"] = Relationship(back_populates="user", cascade_delete=True)
     comments: list["Comment"] = Relationship(back_populates="user", cascade_delete=True)
+    documents: list["Document"] = Relationship(back_populates="user", cascade_delete=True)
     company: "Company" = Relationship(back_populates="users")
 
     @classmethod

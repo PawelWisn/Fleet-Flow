@@ -45,16 +45,13 @@ export interface Vehicle {
 
 export interface Reservation {
   id: number;
-  start_date: string;
-  end_date: string;
-  purpose: string;
-  status: string;
-  user_id: number;
+  date_from: string;
+  date_to: string;
+  reservation_date: string;
   vehicle_id: number;
-  user?: User;
+  user_id: number;
   vehicle?: Vehicle;
-  created_at: string;
-  updated_at: string;
+  user?: User;
 }
 
 export interface Refuel {
@@ -104,9 +101,9 @@ export interface Document {
   id: number;
   title: string;
   description: string;
-  file_path: string;
+  file_path?: string;
   file_type: string;
-  file_size: number;
+  file_size?: number;
   vehicle_id: number;
   user_id: number;
   vehicle?: Vehicle;
@@ -175,10 +172,17 @@ export interface CreateVehicleForm {
 }
 
 export interface CreateReservationForm {
-  start_date: string;
-  end_date: string;
-  purpose: string;
+  date_from: string;
+  date_to: string;
   vehicle_id: number;
+  user_id: number;
+}
+
+export interface UpdateReservationForm {
+  date_from?: string;
+  date_to?: string;
+  vehicle_id?: number;
+  user_id?: number;
 }
 
 export interface CreateRefuelForm {
@@ -198,4 +202,38 @@ export interface CreateCompanyForm {
   city: string;
   country: string;
   nip: string;
+}
+
+export interface CreateDocumentForm {
+  title: string;
+  description: string;
+  file_type: string;
+  vehicle_id: number;
+  user_id: number;
+}
+
+export interface UpdateDocumentForm {
+  title?: string;
+  description?: string;
+  file_type?: string;
+  vehicle_id?: number;
+  user_id?: number;
+}
+
+export interface CreateUserForm {
+  email: string;
+  name: string;
+  password1: string;
+  password2: string;
+  role: 'admin' | 'manager' | 'worker';
+  company_id?: number;
+}
+
+export interface UpdateUserForm {
+  email?: string;
+  name?: string;
+  password1?: string;
+  password2?: string;
+  role?: 'admin' | 'manager' | 'worker';
+  company_id?: number;
 }

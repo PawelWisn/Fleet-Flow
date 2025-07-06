@@ -13,23 +13,39 @@ import {
 	Bars3Icon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-const navigation = [
-	{ name: "Vehicles", href: "/vehicles", icon: TruckIcon },
-	{ name: "Reservations", href: "/reservations", icon: CalendarIcon },
-	{ name: "Users", href: "/users", icon: UsersIcon },
-	{ name: "Companies", href: "/companies", icon: BuildingOfficeIcon },
-	{ name: "Documents", href: "/documents", icon: DocumentTextIcon },
-	{ name: "Reports", href: "/reports", icon: ChartBarIcon },
-	{ name: "Settings", href: "/settings", icon: Cog6ToothIcon },
+const allNavigation = [
+	{ name: "Vehicles", href: "/vehicles", icon: TruckIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Reservations", href: "/reservations", icon: CalendarIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Users", href: "/users", icon: UsersIcon, roles: ["manager", "admin"] },
+	{ name: "Companies", href: "/companies", icon: BuildingOfficeIcon, roles: ["manager", "admin"] },
+	{ name: "Documents", href: "/documents", icon: DocumentTextIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Reports", href: "/reports", icon: ChartBarIcon, roles: ["manager", "admin"] },
+	{ name: "Settings", href: "/settings", icon: Cog6ToothIcon, roles: ["admin"] },
 ];
 
 interface DashboardLayoutProps {
 	children: React.ReactNode;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const { user, loading } = useAuth();
+
+	// Filter navigation based on user role
+	const navigation = allNavigation.filter((item) => {
+		if (!user) return false;
+		return item.roles.includes(user.role);
+	});
+
+	if (loading) {
+		return (
+			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+				<div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -114,5 +130,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 				</main>
 			</div>
 		</div>
+	);
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+	return (
+		<AuthProvider>
+			<DashboardLayoutContent>{children}</DashboardLayoutContent>
+		</AuthProvider>
 	);
 }

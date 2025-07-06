@@ -14,16 +14,22 @@ import {
   CreateVehicleForm,
   CreateCompanyForm,
   CreateReservationForm,
+  UpdateReservationForm,
+  CreateDocumentForm,
+  UpdateDocumentForm,
+  CreateUserForm,
+  UpdateUserForm,
   CreateRefuelForm
 } from '@/types';
 
 // Users API
 export const usersApi = {
-  getAll: (): Promise<PaginatedResponse<User>> => api.get('/users').then(res => res.data),
-  getById: (id: number): Promise<User> => api.get(`/users/${id}`).then(res => res.data),
-  create: (data: Partial<User>): Promise<User> => api.post('/users', data).then(res => res.data),
-  update: (id: number, data: Partial<User>): Promise<User> => api.put(`/users/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/users/${id}`).then(res => res.data),
+  getAll: (): Promise<PaginatedResponse<User>> => api.get('/users/').then(res => res.data),
+  getById: (id: number): Promise<User> => api.get(`/users/${id}/`).then(res => res.data),
+  getCurrentUser: (): Promise<User> => api.get('/users/me/').then(res => res.data),
+  create: (data: CreateUserForm): Promise<User> => api.post('/users/', data).then(res => res.data),
+  update: (id: number, data: UpdateUserForm): Promise<User> => api.put(`/users/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/users/${id}/`).then(res => res.data),
 };
 
 // Vehicles API
@@ -47,13 +53,20 @@ export const companiesApi = {
 
 // Reservations API
 export const reservationsApi = {
-  getAll: (): Promise<PaginatedResponse<Reservation>> => api.get('/reservations').then(res => res.data),
-  getById: (id: number): Promise<Reservation> => api.get(`/reservations/${id}`).then(res => res.data),
-  create: (data: CreateReservationForm): Promise<Reservation> => api.post('/reservations', data).then(res => res.data),
-  update: (id: number, data: Partial<Reservation>): Promise<Reservation> => api.put(`/reservations/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/reservations/${id}`).then(res => res.data),
-  getByUser: (userId: number): Promise<Reservation[]> => api.get(`/reservations?user_id=${userId}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Reservation[]> => api.get(`/reservations?vehicle_id=${vehicleId}`).then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+    user_id?: number;
+  }): Promise<PaginatedResponse<Reservation>> => api.get('/reservations/', { params }).then(res => res.data),
+
+  getById: (id: number): Promise<Reservation> => api.get(`/reservations/${id}/`).then(res => res.data),
+
+  create: (data: CreateReservationForm): Promise<Reservation> => api.post('/reservations/', data).then(res => res.data),
+
+  update: (id: number, data: UpdateReservationForm): Promise<Reservation> => api.put(`/reservations/${id}/`, data).then(res => res.data),
+
+  delete: (id: number): Promise<void> => api.delete(`/reservations/${id}/`).then(res => res.data),
 };
 
 // Refuels API
@@ -88,15 +101,45 @@ export const insuranceApi = {
 
 // Documents API
 export const documentsApi = {
-  getAll: (): Promise<PaginatedResponse<Document>> => api.get('/documents').then(res => res.data),
-  getById: (id: number): Promise<Document> => api.get(`/documents/${id}`).then(res => res.data),
-  create: (data: FormData): Promise<Document> => api.post('/documents', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+    user_id?: number;
+  }): Promise<PaginatedResponse<Document>> => api.get('/documents/', { params }).then(res => res.data),
+
+  getById: (id: number): Promise<Document> => api.get(`/documents/${id}/`).then(res => res.data),
+
+  create: (data: CreateDocumentForm & { file?: File }): Promise<Document> => {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('file_type', data.file_type);
+    formData.append('vehicle_id', data.vehicle_id.toString());
+    formData.append('user_id', data.user_id.toString());
+
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+
+    return api.post('/documents/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  },
+
+  update: (id: number, data: UpdateDocumentForm): Promise<Document> => api.put(`/documents/${id}/`, data).then(res => res.data),
+
+  delete: (id: number): Promise<void> => api.delete(`/documents/${id}/`).then(res => res.data),
+
+  download: (id: number): Promise<Blob> => api.get(`/documents/${id}/download`, {
+    responseType: 'blob',
   }).then(res => res.data),
-  update: (id: number, data: Partial<Document>): Promise<Document> => api.put(`/documents/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/documents/${id}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Document[]> => api.get(`/documents?vehicle_id=${vehicleId}`).then(res => res.data),
-  download: (id: number): Promise<Blob> => api.get(`/documents/${id}/download`, { responseType: 'blob' }).then(res => res.data),
+
+  getByVehicle: (vehicleId: number): Promise<Document[]> => api.get(`/documents/?vehicle_id=${vehicleId}`).then(res => res.data),
+
+  getByUser: (userId: number): Promise<Document[]> => api.get(`/documents/?user_id=${userId}`).then(res => res.data),
 };
 
 // Comments API

@@ -112,7 +112,7 @@ def rebuild_models():
     from insurrances.models import InsurranceNestedRead, InsurranceRead
     from refuels.models import RefuelNestedRead, RefuelRead
     from reservations.models import ReservationNestedRead, ReservationRead
-    from users.models import UserCreate, UserNestedRead, UserRead
+    from users.models import User, UserCreate, UserNestedRead, UserRead
     from vehicles.models import VehicleNestedRead, VehicleRead
 
     all_subclasses = get_all_subclasses(SQLModel)

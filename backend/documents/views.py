@@ -1,14 +1,21 @@
-from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference
+import os
+from typing import Optional
+
+from commons import get_filters, get_from_qs_or_404, validate_obj_reference
 from dependencies import LoginReqDep, SessionDep
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status
+from fastapi.responses import FileResponse
+from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.sql import Select
 from users.models import User
 from vehicles.models import Vehicle
 
-from .models import Document, DocumentCreate, DocumentRead, VehicleDocument
+from .models import Document, DocumentCreate, DocumentCreateWithFile, DocumentRead, DocumentUpdate
+from .utils import DocumentFileManager, FileStorageError
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+document_file_manager = DocumentFileManager()
 
 
 def get_queryset(request_user: User) -> Select[Document]:
@@ -29,21 +36,45 @@ async def list_documents(
 async def create_document(
     session: SessionDep,
     request_user: LoginReqDep,
-    document: DocumentCreate,
     response: Response,
+    title: str = Form(...),
+    description: str = Form(default=""),
+    file_type: str = Form(...),
+    vehicle_id: int = Form(...),
+    user_id: int = Form(...),
+    file: Optional[UploadFile] = File(None),
 ) -> DocumentRead:
-    validate_obj_reference(session, document, Vehicle, document.vehicle_id)
+    file_content = None
+    original_filename = None
+    if file and file.filename:
+        file_content = await file.read()
+        original_filename = file.filename
 
-    db_document = Document.model_validate(document)
+    document_form = DocumentCreateWithFile(
+        title=title, description=description, file_type=file_type, vehicle_id=vehicle_id, user_id=user_id, file=file_content, filename=original_filename
+    )
+
+    validate_obj_reference(session, document_form, Vehicle, document_form.vehicle_id)
+    validate_obj_reference(session, document_form, User, document_form.user_id)
+
+    file_path, file_size = None, None
+    if file and file.filename:
+        try:
+            file_path, file_size = await document_file_manager.store_file(file)
+        except FileStorageError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    document_data = DocumentCreate(
+        title=document_form.title, description=document_form.description, file_type=document_form.file_type, vehicle_id=document_form.vehicle_id, user_id=document_form.user_id
+    )
+
+    db_document = Document.model_validate(document_data)
+    db_document.file_path = file_path
+    db_document.file_size = file_size
+
     session.add(db_document)
-    session.flush()
-
-    db_vehicle_document = VehicleDocument(vehicle_id=document.vehicle_id, document_id=db_document.id)
-    session.add(db_vehicle_document)
     session.commit()
-
     session.refresh(db_document)
-    session.refresh(db_vehicle_document)
 
     response.status_code = status.HTTP_201_CREATED
     return db_document
@@ -64,9 +95,12 @@ async def update_document(
     session: SessionDep,
     request_user: LoginReqDep,
     document_id: int,
-    document: DocumentCreate,
+    document: DocumentUpdate,
 ) -> DocumentRead:
-    validate_obj_reference(session, document, Vehicle, document.vehicle_id)
+    if document.vehicle_id:
+        validate_obj_reference(session, document, Vehicle, document.vehicle_id)
+    if document.user_id:
+        validate_obj_reference(session, document, User, document.user_id)
 
     qs = get_queryset(request_user)
     db_document = get_from_qs_or_404(session, qs, document_id)
@@ -85,6 +119,28 @@ async def delete_document(
 ) -> None:
     qs = get_queryset(request_user)
     db_document = get_from_qs_or_404(session, qs, document_id)
+
+    if db_document.file_path:
+        document_file_manager.delete_file(db_document.file_path)
+
     session.delete(db_document)
     session.commit()
     response.status_code = status.HTTP_204_NO_CONTENT
+
+
+@router.get("/{document_id}/download")
+async def download_document_file(
+    session: SessionDep,
+    request_user: LoginReqDep,
+    document_id: int,
+) -> FileResponse:
+    qs = get_queryset(request_user)
+    db_document = get_from_qs_or_404(session, qs, document_id)
+
+    if not db_document.file_path or not document_file_manager.file_exists(db_document.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_extension = os.path.splitext(db_document.file_path)[1]
+    filename = f"{db_document.title}{file_extension}"
+
+    return FileResponse(path=db_document.file_path, filename=filename, media_type="application/octet-stream")

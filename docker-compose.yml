@@ -28,6 +28,9 @@ services:
         - path: ./backend
           target: /app
           action: sync
+    volumes:
+      - ./backend/alembic/versions:/app/alembic/versions
+      - uploads:/app/uploads
     environment:
       - TZ=$TIMEZONE
     env_file:
@@ -58,3 +61,4 @@ services:
 
 volumes:
   db-data:
+  uploads:

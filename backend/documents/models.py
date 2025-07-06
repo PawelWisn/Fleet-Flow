@@ -1,5 +1,6 @@
+from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 from database import SQLModel
 from sqlalchemy.sql import Select
@@ -16,27 +17,33 @@ if TYPE_CHECKING:
 
 
 class DocumentType(str, Enum):
-    RECEIPT = "receipt"
-    INVOICE = "invoice"
+    REGISTRATION = "registration"
+    INSURANCE = "insurance"
+    MAINTENANCE = "maintenance"
+    INSPECTION = "inspection"
+    MANUAL = "manual"
     OTHER = "other"
 
 
-class VehicleDocument(SQLModel, table=True):
-    __tablename__ = "vehicle_documents"
-    id: int | None = Field(primary_key=True, default=None)
-    vehicle_id: int = Field(foreign_key="vehicles.id", ondelete="CASCADE")
-    document_id: int = Field(foreign_key="documents.id", ondelete="CASCADE")
-
-
 class DocumentBase(SQLModel):
-    name: str = Field(max_length=128)
-    document_type: DocumentType = Field(sa_column=Column(EnumSQL(DocumentType)))
+    title: str = Field(max_length=255)
+    description: str = Field(default="")
+    file_path: Optional[str] = Field(default=None, max_length=500)
+    file_type: str = Field(max_length=50)
+    file_size: Optional[int] = Field(default=None)
+    vehicle_id: int = Field(foreign_key="vehicles.id")
+    user_id: int = Field(foreign_key="users.id")
 
 
 class Document(DocumentBase, table=True):
     __tablename__ = "documents"
-    id: int | None = Field(primary_key=True, default=None)
-    vehicles: list["Vehicle"] = Relationship(back_populates="documents", link_model=VehicleDocument)
+    id: Optional[int] = Field(primary_key=True, default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Relationships
+    vehicle: "Vehicle" = Relationship(back_populates="documents")
+    user: "User" = Relationship(back_populates="documents")
     refuels: list["Refuel"] = Relationship(back_populates="document", cascade_delete=True)
     events: list["Event"] = Relationship(back_populates="document", cascade_delete=True)
     insurrances: list["Insurrance"] = Relationship(back_populates="document", cascade_delete=True)
@@ -48,15 +55,48 @@ class Document(DocumentBase, table=True):
 
 class DocumentRead(DocumentBase):
     id: int
-    vehicles: list["VehicleNestedRead"]
-    refuels: list["RefuelNestedRead"]
-    events: list["EventNestedRead"]
-    insurrances: list["InsurranceNestedRead"]
+    created_at: datetime
+    updated_at: datetime
+    vehicle: Optional["VehicleNestedRead"] = None
+    user: Optional["User"] = None
 
 
-class DocumentNestedRead(DocumentBase):
+class DocumentNestedRead(SQLModel):
     id: int
-
-
-class DocumentCreate(DocumentBase):
+    title: str
+    description: str
+    file_path: Optional[str]
+    file_type: str
+    file_size: Optional[int]
     vehicle_id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class DocumentCreate(SQLModel):
+    title: str = Field(max_length=255)
+    description: str = Field(default="")
+    file_type: str = Field(max_length=50)
+    vehicle_id: int
+    user_id: int
+
+
+class DocumentUpdate(SQLModel):
+    title: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = Field(default=None)
+    file_path: Optional[str] = Field(default=None, max_length=500)
+    file_type: Optional[str] = Field(default=None, max_length=50)
+    file_size: Optional[int] = Field(default=None)
+    vehicle_id: Optional[int] = Field(default=None)
+    user_id: Optional[int] = Field(default=None)
+
+
+class DocumentCreateWithFile(SQLModel):
+    title: str = Field(max_length=255)
+    description: str = Field(default="")
+    file_type: str = Field(max_length=50)
+    vehicle_id: int
+    user_id: int
+    file: Optional[bytes] = Field(default=None, exclude=True)  # File content as bytes
+    filename: Optional[str] = Field(default=None, exclude=True)  # Original filename
