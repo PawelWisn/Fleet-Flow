@@ -310,7 +310,7 @@ export default function DashboardPage() {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-												{vehicle.company?.address || "N/A"}
+												{vehicle.company?.address1 || "N/A"}
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 												{vehicle.kilometrage?.toLocaleString() || "N/A"} km
