@@ -7,7 +7,6 @@ from commons import rebuild_models
 from companies.views import router as companies_router
 from database import create_db_and_tables, run_migrations
 from documents.views import router as documents_router
-from entrypoint import entrypoint
 from events.views import router as events_router
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +25,6 @@ logger = logging.getLogger("uvicorn.critical")
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     run_migrations()
-    entrypoint()
     yield
 
 
