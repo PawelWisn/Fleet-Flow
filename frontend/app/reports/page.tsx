@@ -12,7 +12,7 @@ import {
 	UsersIcon,
 } from "@heroicons/react/24/outline";
 import { reportsApi, vehiclesApi, reservationsApi, refuelsApi, usersApi } from "@/services/api";
-import { RefuelStat, Vehicle, PaginatedResponse } from "@/types";
+import { RefuelStat, Vehicle, PaginatedResponse, Refuel } from "@/types";
 import toast from "react-hot-toast";
 
 interface DashboardStats {
@@ -25,6 +25,7 @@ interface DashboardStats {
 export default function ReportsPage() {
 	const [fuelStats, setFuelStats] = useState<RefuelStat[]>([]);
 	const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+	const [recentRefuels, setRecentRefuels] = useState<Refuel[]>([]);
 	const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
 		totalVehicles: 0,
 		totalRefuels: 0,
@@ -61,6 +62,8 @@ export default function ReportsPage() {
 				try {
 					const refuelsRes = await refuelsApi.getAll();
 					setDashboardStats((prev) => ({ ...prev, totalRefuels: refuelsRes.total }));
+					// Get the first 15 recent refuels
+					setRecentRefuels(refuelsRes.items.slice(0, 15));
 				} catch (error) {
 					console.warn("Failed to fetch refuels:", error);
 				}
@@ -148,7 +151,7 @@ export default function ReportsPage() {
 
 	if (loading) {
 		return (
-			<DashboardLayout title="Reports & Analytics" subtitle="View system statistics and generate reports">
+			<DashboardLayout title="Analytics" subtitle="View system statistics and generate reports">
 				<div className="flex items-center justify-center h-64">
 					<LoadingSpinner />
 				</div>
@@ -157,7 +160,7 @@ export default function ReportsPage() {
 	}
 
 	return (
-		<DashboardLayout title="Reports & Analytics" subtitle="View system statistics and generate reports">
+		<DashboardLayout title="Analytics" subtitle="View system statistics and generate reports">
 			<div className="space-y-8">
 				{/* Dashboard Stats */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -212,52 +215,6 @@ export default function ReportsPage() {
 							</div>
 						</div>
 					</div>
-				</div>
-
-				{/* Fuel Usage Chart */}
-				<div className="card">
-					<div className="flex items-center justify-between mb-6">
-						<div>
-							<h3 className="text-lg font-semibold text-gray-900">Monthly Fuel Usage</h3>
-							<p className="text-sm text-gray-500">Fuel consumption over time</p>
-						</div>
-						<ChartBarIcon className="h-6 w-6 text-gray-400" />
-					</div>
-
-					{fuelStats.length > 0 ? (
-						<div className="space-y-4">
-							{/* Simple bar chart representation */}
-							<div className="space-y-3">
-								{fuelStats.slice(-12).map((stat, index) => {
-									const maxFuel = Math.max(...fuelStats.map((s) => s.total_fuel));
-									const percentage = (stat.total_fuel / maxFuel) * 100;
-
-									return (
-										<div key={stat.month_year} className="flex items-center space-x-4">
-											<div className="w-20 text-sm text-gray-600 font-mono">{formatMonth(stat.month_year)}</div>
-											<div className="flex-1">
-												<div className="bg-gray-200 rounded-full h-6 relative">
-													<div
-														className="bg-blue-600 h-6 rounded-full transition-all duration-300"
-														style={{ width: `${percentage}%` }}
-													/>
-													<div className="absolute inset-0 flex items-center px-3">
-														<span className="text-xs font-medium text-white">{stat.total_fuel.toFixed(1)}L</span>
-													</div>
-												</div>
-											</div>
-										</div>
-									);
-								})}
-							</div>
-						</div>
-					) : (
-						<div className="text-center py-8">
-							<ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-							<h3 className="mt-2 text-sm font-medium text-gray-900">No fuel data</h3>
-							<p className="mt-1 text-sm text-gray-500">Start adding fuel records to see statistics</p>
-						</div>
-					)}
 				</div>
 
 				{/* Vehicle Reports */}
@@ -318,47 +275,74 @@ export default function ReportsPage() {
 					</div>
 				</div>
 
-				{/* Vehicle Status Overview */}
+				{/* Recent Refuel Entries */}
 				<div className="card">
 					<div className="flex items-center justify-between mb-6">
 						<div>
-							<h3 className="text-lg font-semibold text-gray-900">Vehicle Status Overview</h3>
-							<p className="text-sm text-gray-500">Current status of all vehicles in the fleet</p>
+							<h3 className="text-lg font-semibold text-gray-900">Recent Refuel Entries</h3>
+							<p className="text-sm text-gray-500">Last 15 fuel records</p>
 						</div>
+						<BeakerIcon className="h-6 w-6 text-gray-400" />
 					</div>
 
-					{vehicles.length > 0 ? (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{["available", "in use", "service", "decommissioned", "booked"].map((status) => {
-								const count = vehicles.filter((v) => v.availability === status).length;
-								const percentage = vehicles.length > 0 ? ((count / vehicles.length) * 100).toFixed(1) : "0";
-
-								const statusColors = {
-									available: "text-green-600 bg-green-100",
-									"in use": "text-blue-600 bg-blue-100",
-									service: "text-yellow-600 bg-yellow-100",
-									decommissioned: "text-red-600 bg-red-100",
-									booked: "text-purple-600 bg-purple-100",
-								};
-
-								return (
-									<div key={status} className="text-center p-4 rounded-lg border border-gray-200">
-										<div
-											className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[status as keyof typeof statusColors]}`}
-										>
-											{status.charAt(0).toUpperCase() + status.slice(1)}
-										</div>
-										<div className="mt-2 text-2xl font-bold text-gray-900">{count}</div>
-										<div className="text-sm text-gray-500">{percentage}% of fleet</div>
-									</div>
-								);
-							})}
+					{recentRefuels.length > 0 ? (
+						<div className="overflow-x-auto">
+							<table className="min-w-full divide-y divide-gray-200">
+								<thead className="bg-gray-50">
+									<tr>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Date
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Vehicle
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Driver
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Fuel Amount
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Price
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Gas Station
+										</th>
+										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+											Kilometrage
+										</th>
+									</tr>
+								</thead>
+								<tbody className="bg-white divide-y divide-gray-200">
+									{recentRefuels.map((refuel) => (
+										<tr key={refuel.id} className="hover:bg-gray-50">
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{new Date(refuel.date).toLocaleDateString()}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{refuel.vehicle ? `${refuel.vehicle.brand} ${refuel.vehicle.model}` : "N/A"}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{refuel.user?.name || "N/A"}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{refuel.fuel_amount.toFixed(1)}L
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${refuel.price.toFixed(2)}</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{refuel.gas_station}</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{refuel.kilometrage_during_refuel.toLocaleString()} km
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : (
 						<div className="text-center py-8">
-							<TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
-							<h3 className="mt-2 text-sm font-medium text-gray-900">No vehicles</h3>
-							<p className="mt-1 text-sm text-gray-500">Add vehicles to see status overview</p>
+							<BeakerIcon className="mx-auto h-12 w-12 text-gray-400" />
+							<h3 className="mt-2 text-sm font-medium text-gray-900">No refuel records</h3>
+							<p className="mt-1 text-sm text-gray-500">Start adding fuel records to see them here</p>
 						</div>
 					)}
 				</div>

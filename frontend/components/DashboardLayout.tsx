@@ -24,7 +24,7 @@ const allNavigation = [
 	{ name: "Users", href: "/users", icon: UsersIcon, roles: ["manager", "admin"] },
 	{ name: "Companies", href: "/companies", icon: BuildingOfficeIcon, roles: ["manager", "admin"] },
 	{ name: "Documents", href: "/documents", icon: DocumentTextIcon, roles: ["worker", "manager", "admin"] },
-	{ name: "Reports", href: "/reports", icon: ChartBarIcon, roles: ["manager", "admin"] },
+	{ name: "Analytics", href: "/reports", icon: ChartBarIcon, roles: ["manager", "admin"] },
 	{ name: "Settings", href: "/settings", icon: Cog6ToothIcon, roles: ["admin"] },
 ];
 
