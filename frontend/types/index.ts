@@ -66,11 +66,9 @@ export interface Refuel {
   vehicle_id: number;
   document_id: number;
   user_id: number;
-  company_id: number;
   vehicle?: Vehicle;
   document?: Document;
   user?: User;
-  company?: Company;
   created_at: string;
   updated_at: string;
 }
@@ -192,7 +190,6 @@ export interface CreateRefuelForm {
   vehicle_id: number;
   document_id: number;
   user_id: number;
-  company_id: number;
 }
 
 export interface CreateCompanyForm {

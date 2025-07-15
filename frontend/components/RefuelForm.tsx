@@ -21,7 +21,6 @@ interface RefuelFormErrors {
 	vehicle_id?: string;
 	document_id?: string;
 	user_id?: string;
-	company_id?: string;
 }
 
 export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) {
@@ -41,7 +40,6 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 		vehicle_id: refuel?.vehicle_id || 0,
 		document_id: refuel?.document_id || 0,
 		user_id: refuel?.user_id || 0,
-		company_id: refuel?.company_id || 0,
 	});
 
 	const [errors, setErrors] = useState<RefuelFormErrors>({});

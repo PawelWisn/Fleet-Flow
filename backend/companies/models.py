@@ -7,7 +7,6 @@ from sqlmodel import Field, Relationship, select
 if TYPE_CHECKING:
     from events.models import Event, EventNestedRead
     from insurrances.models import Insurrance, InsurranceNestedRead
-    from refuels.models import Refuel, RefuelNestedRead
     from users.models import User, UserNestedRead
     from vehicles.models import Vehicle, VehicleNestedRead
 
@@ -30,7 +29,6 @@ class Company(CompanyBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     vehicles: list["Vehicle"] = Relationship(back_populates="company", cascade_delete=True)
     users: list["User"] = Relationship(back_populates="company", cascade_delete=True)
-    refuels: list["Refuel"] = Relationship(back_populates="company", cascade_delete=True)
     events: list["Event"] = Relationship(back_populates="company", cascade_delete=True)
     insurrances: list["Insurrance"] = Relationship(back_populates="company", cascade_delete=True)
 
@@ -48,7 +46,6 @@ class CompanyRead(CompanyBase):
     id: int
     vehicles: list["VehicleNestedRead"]
     users: list["UserNestedRead"]
-    refuels: list["RefuelNestedRead"]
     events: list["EventNestedRead"]
     insurrances: list["InsurranceNestedRead"]
 
