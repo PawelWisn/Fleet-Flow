@@ -12,12 +12,15 @@ import {
 	Cog6ToothIcon,
 	Bars3Icon,
 	XMarkIcon,
+	BeakerIcon,
 } from "@heroicons/react/24/outline";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import TopBar from "@/components/TopBar";
 
 const allNavigation = [
 	{ name: "Vehicles", href: "/vehicles", icon: TruckIcon, roles: ["worker", "manager", "admin"] },
 	{ name: "Reservations", href: "/reservations", icon: CalendarIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Refuels", href: "/refuels", icon: BeakerIcon, roles: ["worker", "manager", "admin"] },
 	{ name: "Users", href: "/users", icon: UsersIcon, roles: ["manager", "admin"] },
 	{ name: "Companies", href: "/companies", icon: BuildingOfficeIcon, roles: ["manager", "admin"] },
 	{ name: "Documents", href: "/documents", icon: DocumentTextIcon, roles: ["worker", "manager", "admin"] },
@@ -27,9 +30,11 @@ const allNavigation = [
 
 interface DashboardLayoutProps {
 	children: React.ReactNode;
+	title?: string;
+	subtitle?: string;
 }
 
-function DashboardLayoutContent({ children }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children, title, subtitle }: DashboardLayoutProps) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const { user, loading } = useAuth();
 
@@ -50,7 +55,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 	return (
 		<div className="min-h-screen bg-gray-50">
 			{/* Mobile sidebar */}
-			<div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? "block" : "hidden"}`}>
+			<div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? "block" : "hidden"}`}>
 				<div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
 				<div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
 					<div className="absolute top-0 right-0 -mr-12 pt-2">
@@ -111,8 +116,8 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 
 			{/* Main content */}
 			<div className="lg:pl-64 flex flex-col flex-1">
-				{/* Top bar */}
-				<div className="sticky top-0 z-10 bg-white border-b border-gray-200 pl-1 pt-1 pb-1 sm:pl-3 sm:pt-3 sm:pb-3 lg:hidden">
+				{/* Mobile menu button - only visible on mobile */}
+				<div className="sticky top-0 z-40 bg-white border-b border-gray-200 pl-1 pt-1 pb-1 sm:pl-3 sm:pt-3 sm:pb-3 lg:hidden">
 					<button
 						type="button"
 						className="-ml-0.5 -mt-0.5 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
@@ -121,6 +126,9 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 						<Bars3Icon className="h-6 w-6" />
 					</button>
 				</div>
+
+				{/* Top Bar - visible on all screen sizes */}
+				<TopBar title={title} subtitle={subtitle} />
 
 				{/* Page content */}
 				<main className="flex-1">
@@ -133,10 +141,12 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 	);
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
 	return (
 		<AuthProvider>
-			<DashboardLayoutContent>{children}</DashboardLayoutContent>
+			<DashboardLayoutContent title={title} subtitle={subtitle}>
+				{children}
+			</DashboardLayoutContent>
 		</AuthProvider>
 	);
 }

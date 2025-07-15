@@ -9,7 +9,7 @@ from sqlmodel import Enum as EnumSQL
 from sqlmodel import Field, Relationship, select
 
 if TYPE_CHECKING:
-    from contractors.models import Contractor, ContractorNestedRead
+    from companies.models import Company, CompanyNestedRead
     from documents.models import Document, DocumentNestedRead
     from users.models import User
     from vehicles.models import Vehicle, VehicleNestedRead
@@ -31,7 +31,7 @@ class InsurranceBase(SQLModel):
     insurrance_type: InsurrenceType = Field(sa_column=Column(EnumSQL(InsurrenceType)))
     vehicle_id: int = Field(foreign_key="vehicles.id", ondelete="CASCADE")
     document_id: int = Field(foreign_key="documents.id", ondelete="CASCADE")
-    contractor_id: int = Field(foreign_key="contractors.id", ondelete="CASCADE")
+    company_id: int = Field(foreign_key="companies.id", ondelete="CASCADE")
 
 
 class Insurrance(InsurranceBase, table=True):
@@ -39,7 +39,7 @@ class Insurrance(InsurranceBase, table=True):
     id: int | None = Field(primary_key=True, default=None)
     vehicle: "Vehicle" = Relationship(back_populates="insurrances")
     document: "Document" = Relationship(back_populates="insurrances")
-    contractor: "Contractor" = Relationship(back_populates="insurrances")
+    company: "Company" = Relationship(back_populates="insurrances")
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Insurrance"]:
@@ -60,7 +60,7 @@ class InsurranceRead(InsurranceBase):
     id: int
     vehicle: "VehicleNestedRead"
     document: "DocumentNestedRead"
-    contractor: "ContractorNestedRead | None"
+    company: "CompanyNestedRead | None"
 
 
 class InsurranceNestedRead(InsurranceBase):

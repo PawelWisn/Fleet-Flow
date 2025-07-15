@@ -6,7 +6,7 @@ from sqlalchemy.sql import Select
 from sqlmodel import Field, Relationship, select
 
 if TYPE_CHECKING:
-    from contractors.models import Contractor, ContractorNestedRead
+    from companies.models import Company, CompanyNestedRead
     from documents.models import Document, DocumentNestedRead
     from users.models import User, UserNestedRead
     from vehicles.models import Vehicle, VehicleNestedRead
@@ -21,7 +21,7 @@ class RefuelBase(SQLModel):
     vehicle_id: int = Field(foreign_key="vehicles.id", ondelete="CASCADE")
     document_id: int = Field(foreign_key="documents.id", ondelete="CASCADE")
     user_id: int = Field(foreign_key="users.id", ondelete="CASCADE")
-    contractor_id: int = Field(foreign_key="contractors.id", ondelete="CASCADE")
+    company_id: int = Field(foreign_key="companies.id", ondelete="CASCADE")
 
 
 class Refuel(RefuelBase, table=True):
@@ -30,7 +30,7 @@ class Refuel(RefuelBase, table=True):
     vehicle: "Vehicle" = Relationship(back_populates="refuels")
     document: "Document" = Relationship(back_populates="refuels")
     user: "User" = Relationship(back_populates="refuels")
-    contractor: "Contractor" = Relationship(back_populates="refuels")
+    company: "Company" = Relationship(back_populates="refuels")
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Refuel"]:
@@ -49,7 +49,7 @@ class RefuelRead(RefuelBase):
     vehicle: "VehicleNestedRead"
     document: "DocumentNestedRead"
     user: "UserNestedRead"
-    contractor: "ContractorNestedRead | None"
+    company: "CompanyNestedRead | None"
 
 
 class RefuelNestedRead(RefuelBase):

@@ -1,5 +1,5 @@
 from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference
-from contractors.models import Contractor
+from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from documents.models import Document
 from fastapi import APIRouter, Query, Response, status
@@ -23,9 +23,9 @@ async def list_insurrances(
     request_user: LoginReqDep,
     vehicle_id: int = Query(None),
     document_id: int = Query(None),
-    contractor_id: int = Query(None),
+    company_id: int = Query(None),
 ) -> Page[InsurranceRead]:
-    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "contractor_id": contractor_id})
+    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "company_id": company_id})
     qs = get_queryset(request_user).filter_by(**filters)
     return paginate(session, qs)
 
@@ -49,7 +49,7 @@ async def create_insurrance(
 ) -> InsurranceRead:
     validate_obj_reference(session, insurrance, Vehicle, insurrance.vehicle_id)
     validate_obj_reference(session, insurrance, Document, insurrance.document_id)
-    validate_obj_reference(session, insurrance, Contractor, insurrance.contractor_id)
+    validate_obj_reference(session, insurrance, Company, insurrance.company_id)
 
     db_insurrance = Insurrance.model_validate(insurrance)
     session.add(db_insurrance)
@@ -78,7 +78,7 @@ async def update_insurrance(
 ) -> InsurranceRead:
     validate_obj_reference(session, insurrance, Vehicle, insurrance.vehicle_id)
     validate_obj_reference(session, insurrance, Document, insurrance.document_id)
-    validate_obj_reference(session, insurrance, Contractor, insurrance.contractor_id)
+    validate_obj_reference(session, insurrance, Company, insurrance.company_id)
 
     qs = get_queryset(request_user)
     db_insurrance = get_from_qs_or_404(session, qs, insurrance_id)

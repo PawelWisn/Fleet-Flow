@@ -4,7 +4,6 @@ import alembic_postgresql_enum
 from alembic import context
 from comments.models import Comment
 from companies.models import Company
-from contractors.models import Contractor
 from documents.models import Document
 from events.models import Event
 from insurrances.models import Insurrance

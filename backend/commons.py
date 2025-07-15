@@ -105,7 +105,6 @@ def get_all_subclasses(klass: Type[object]) -> list[Type]:
 def rebuild_models():
     from comments.models import CommentNestedRead, CommentRead
     from companies.models import CompanyNestedRead, CompanyRead
-    from contractors.models import ContractorNestedRead, ContractorRead
     from database import SQLModel
     from documents.models import DocumentNestedRead, DocumentRead
     from events.models import EventNestedRead, EventRead

@@ -1,10 +1,10 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from comments.views import router as comments_router
 from commons import rebuild_models
 from companies.views import router as companies_router
-from contractors.views import router as contractors_router
 from database import create_db_and_tables, run_migrations
 from documents.views import router as documents_router
 from entrypoint import entrypoint
@@ -39,7 +39,9 @@ app = FastAPI(
 )
 
 add_pagination(app)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8080", "http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, allow_origins=[f"http://localhost:{os.getenv('FE_PORT', '8080')}", "http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+)
 
 
 @app.get("/", status_code=status.HTTP_301_MOVED_PERMANENTLY)
@@ -50,7 +52,6 @@ async def redirect_to_documentation() -> RedirectResponse:
 # Please maintain alphabetic order
 app.include_router(comments_router)
 app.include_router(companies_router)
-app.include_router(contractors_router)
 app.include_router(documents_router)
 app.include_router(events_router)
 app.include_router(insurrances_router)

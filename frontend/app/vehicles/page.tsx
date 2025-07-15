@@ -57,14 +57,10 @@ export default function VehiclesPage() {
 	});
 
 	return (
-		<DashboardLayout>
+		<DashboardLayout title="Vehicles" subtitle="Manage your fleet vehicles and their status">
 			<div className="space-y-6">
-				{/* Page header */}
-				<div className="flex justify-between items-center">
-					<div>
-						<h1 className="text-2xl font-semibold text-gray-900">Vehicles</h1>
-						<p className="mt-2 text-sm text-gray-700">Manage your fleet vehicles and their status.</p>
-					</div>
+				{/* Action buttons */}
+				<div className="flex justify-end">
 					<button onClick={() => router.push("/vehicles/add")} className="btn-primary flex items-center">
 						<PlusIcon className="h-5 w-5 mr-2" />
 						Add Vehicle

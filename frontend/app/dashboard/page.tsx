@@ -7,7 +7,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import {
 	TruckIcon,
 	UserGroupIcon,
-	ExclamationTriangleIcon,
+	WrenchScrewdriverIcon,
 	ChartBarIcon,
 	CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
@@ -184,7 +184,7 @@ export default function DashboardPage() {
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
 							<div className="flex-shrink-0">
-								<ExclamationTriangleIcon className="h-8 w-8 text-yellow-600" />
+								<WrenchScrewdriverIcon className="h-8 w-8 text-yellow-600" />
 							</div>
 							<div className="ml-4">
 								<p className="text-sm font-medium text-gray-600">In Service</p>

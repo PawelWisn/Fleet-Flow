@@ -1,5 +1,5 @@
 from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference
-from contractors.models import Contractor
+from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from documents.models import Document
 from fastapi import APIRouter, Query, Response, status
@@ -22,9 +22,9 @@ async def list_events(
     request_user: LoginReqDep,
     vehicle_id: int = Query(None),
     document_id: int = Query(None),
-    contractor_id: int = Query(None),
+    company_id: int = Query(None),
 ) -> Page[EventRead]:
-    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "contractor_id": contractor_id})
+    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "company_id": company_id})
     qs = get_queryset(request_user).filter_by(**filters)
     return paginate(session, qs)
 
@@ -37,7 +37,7 @@ async def create_event(
     response: Response,
 ) -> EventRead:
     validate_obj_reference(session, event, Document, event.document_id)
-    validate_obj_reference(session, event, Contractor, event.contractor_id)
+    validate_obj_reference(session, event, Company, event.company_id)
 
     db_event = Event.model_validate(event)
     session.add(db_event)
@@ -65,7 +65,7 @@ async def update_event(
     event: EventCreate,
 ) -> EventRead:
     validate_obj_reference(session, event, Document, event.document_id)
-    validate_obj_reference(session, event, Contractor, event.contractor_id)
+    validate_obj_reference(session, event, Company, event.company_id)
 
     qs = get_queryset(request_user)
     db_event = get_from_qs_or_404(session, qs, event_id)

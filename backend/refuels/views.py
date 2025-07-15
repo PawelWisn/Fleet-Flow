@@ -1,5 +1,5 @@
 from commons import Page, get_filters, get_from_qs_or_404, validate_obj_reference, validate_user_reference
-from contractors.models import Contractor
+from companies.models import Company
 from dependencies import LoginReqDep, SessionDep
 from documents.models import Document
 from fastapi import APIRouter, Query, Response, status
@@ -24,10 +24,10 @@ async def list_refuels(
     request_user: LoginReqDep,
     vehicle_id: int = Query(None),
     document_id: int = Query(None),
-    contractor_id: int = Query(None),
+    company_id: int = Query(None),
     user_id: int = Query(None),
 ) -> Page[RefuelRead]:
-    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "contractor_id": contractor_id, "user_id": user_id})
+    filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "company_id": company_id, "user_id": user_id})
     qs = get_queryset(request_user).filter_by(**filters)
     return paginate(session, qs)
 
@@ -42,7 +42,7 @@ async def create_refuel(
     validate_obj_reference(session, refuel, Vehicle, refuel.vehicle_id)
     validate_obj_reference(session, refuel, Document, refuel.document_id)
     validate_obj_reference(session, refuel, User, refuel.user_id)
-    validate_obj_reference(session, refuel, Contractor, refuel.contractor_id)
+    validate_obj_reference(session, refuel, Company, refuel.company_id)
     validate_user_reference(session, refuel, request_user)
 
     db_refuel = Refuel.model_validate(refuel)
@@ -81,7 +81,7 @@ async def update_refuel(
     validate_obj_reference(session, refuel, Vehicle, refuel.vehicle_id)
     validate_obj_reference(session, refuel, Document, refuel.document_id)
     validate_obj_reference(session, refuel, User, refuel.user_id)
-    validate_obj_reference(session, refuel, Contractor, refuel.contractor_id)
+    validate_obj_reference(session, refuel, Company, refuel.company_id)
     validate_user_reference(session, refuel, request_user)
 
     qs = get_queryset(request_user)

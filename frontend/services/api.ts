@@ -5,11 +5,11 @@ import {
   Company,
   Reservation,
   Refuel,
+  RefuelStat,
   Event,
   Insurance,
   Document,
   Comment,
-  Contractor,
   PaginatedResponse,
   CreateVehicleForm,
   CreateCompanyForm,
@@ -71,12 +71,12 @@ export const reservationsApi = {
 
 // Refuels API
 export const refuelsApi = {
-  getAll: (): Promise<PaginatedResponse<Refuel>> => api.get('/refuels').then(res => res.data),
-  getById: (id: number): Promise<Refuel> => api.get(`/refuels/${id}`).then(res => res.data),
-  create: (data: CreateRefuelForm): Promise<Refuel> => api.post('/refuels', data).then(res => res.data),
-  update: (id: number, data: Partial<Refuel>): Promise<Refuel> => api.put(`/refuels/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/refuels/${id}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Refuel[]> => api.get(`/refuels?vehicle_id=${vehicleId}`).then(res => res.data),
+  getAll: (): Promise<PaginatedResponse<Refuel>> => api.get('/refuels/').then(res => res.data),
+  getById: (id: number): Promise<Refuel> => api.get(`/refuels/${id}/`).then(res => res.data),
+  create: (data: CreateRefuelForm): Promise<Refuel> => api.post('/refuels/', data).then(res => res.data),
+  update: (id: number, data: Partial<Refuel>): Promise<Refuel> => api.put(`/refuels/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/refuels/${id}/`).then(res => res.data),
+  getByVehicle: (vehicleId: number): Promise<Refuel[]> => api.get(`/refuels/?vehicle_id=${vehicleId}`).then(res => res.data),
 };
 
 // Events API
@@ -152,11 +152,12 @@ export const commentsApi = {
   getByVehicle: (vehicleId: number): Promise<Comment[]> => api.get(`/comments?vehicle_id=${vehicleId}`).then(res => res.data),
 };
 
-// Contractors API
-export const contractorsApi = {
-  getAll: (): Promise<PaginatedResponse<Contractor>> => api.get('/contractors').then(res => res.data),
-  getById: (id: number): Promise<Contractor> => api.get(`/contractors/${id}`).then(res => res.data),
-  create: (data: Partial<Contractor>): Promise<Contractor> => api.post('/contractors', data).then(res => res.data),
-  update: (id: number, data: Partial<Contractor>): Promise<Contractor> => api.put(`/contractors/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/contractors/${id}`).then(res => res.data),
+// Reports API
+export const reportsApi = {
+  getFuelStats: (): Promise<RefuelStat[]> => api.get('/refuels/stats/').then(res => res.data),
+  getVehicleFuelReport: (vehicleId: number): Promise<Blob> =>
+    api.get(`/vehicles/${vehicleId}/reports/fuel/`, {
+      responseType: 'blob',
+      headers: { 'Accept': 'application/pdf' }
+    }).then(res => res.data),
 };

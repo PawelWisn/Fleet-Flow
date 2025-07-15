@@ -5,27 +5,34 @@ from sqlalchemy.sql import Select
 from sqlmodel import Field, Relationship, select
 
 if TYPE_CHECKING:
-    from contractors.models import Contractor, ContractorNestedRead
+    from events.models import Event, EventNestedRead
+    from insurrances.models import Insurrance, InsurranceNestedRead
+    from refuels.models import Refuel, RefuelNestedRead
     from users.models import User, UserNestedRead
     from vehicles.models import Vehicle, VehicleNestedRead
 
 
 class CompanyBase(SQLModel):
     name: str = Field(max_length=128)
+    description: str = Field(max_length=256, default="")
+    phone: str = Field(max_length=12, default="")
     post_code: str = Field(max_length=8)
     address1: str = Field(max_length=128)
     address2: str = Field(max_length=128)
     city: str = Field(max_length=128)
     country: str = Field(max_length=128)
     nip: str = Field(max_length=10)
+    is_internal: bool = Field(default=True)
 
 
 class Company(CompanyBase, table=True):
     __tablename__ = "companies"
     id: int | None = Field(primary_key=True, default=None)
     vehicles: list["Vehicle"] = Relationship(back_populates="company", cascade_delete=True)
-    contractors: list["Contractor"] = Relationship(back_populates="company", cascade_delete=True)
     users: list["User"] = Relationship(back_populates="company", cascade_delete=True)
+    refuels: list["Refuel"] = Relationship(back_populates="company", cascade_delete=True)
+    events: list["Event"] = Relationship(back_populates="company", cascade_delete=True)
+    insurrances: list["Insurrance"] = Relationship(back_populates="company", cascade_delete=True)
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Company"]:
@@ -40,12 +47,31 @@ class Company(CompanyBase, table=True):
 class CompanyRead(CompanyBase):
     id: int
     vehicles: list["VehicleNestedRead"]
-    contractors: list["ContractorNestedRead"]
     users: list["UserNestedRead"]
+    refuels: list["RefuelNestedRead"]
+    events: list["EventNestedRead"]
+    insurrances: list["InsurranceNestedRead"]
 
 
 class CompanyNestedRead(CompanyBase):
     id: int
+
+
+class CompanyCreate(CompanyBase):
+    pass
+
+
+class CompanyUpdate(SQLModel):
+    name: str | None = None
+    description: str | None = None
+    phone: str | None = None
+    post_code: str | None = None
+    address1: str | None = None
+    address2: str | None = None
+    city: str | None = None
+    country: str | None = None
+    nip: str | None = None
+    is_internal: bool | None = None
 
 
 class CompanyCreate(CompanyBase):

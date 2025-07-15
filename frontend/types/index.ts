@@ -13,14 +13,16 @@ export interface User {
 export interface Company {
   id: number;
   name: string;
+  description?: string;
+  phone?: string;
   post_code: string;
   address1: string;
   address2: string;
   city: string;
   country: string;
   nip: string;
+  is_internal: boolean;
   vehicles?: Vehicle[];
-  contractors?: any[];
   users?: User[];
 }
 
@@ -57,16 +59,25 @@ export interface Reservation {
 export interface Refuel {
   id: number;
   date: string;
-  amount: number;
-  cost: number;
-  odometer: number;
-  location: string;
+  fuel_amount: number;
+  price: number;
+  kilometrage_during_refuel: number;
+  gas_station: string;
   vehicle_id: number;
+  document_id: number;
   user_id: number;
+  company_id: number;
   vehicle?: Vehicle;
+  document?: Document;
   user?: User;
+  company?: Company;
   created_at: string;
   updated_at: string;
+}
+
+export interface RefuelStat {
+  month_year: string;
+  total_fuel: number;
 }
 
 export interface Event {
@@ -123,19 +134,6 @@ export interface Comment {
   updated_at: string;
 }
 
-export interface Contractor {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  specialization: string;
-  company_id?: number;
-  company?: Company;
-  created_at: string;
-  updated_at: string;
-}
-
 // API Response types
 export interface ApiResponse<T> {
   data: T;
@@ -187,11 +185,14 @@ export interface UpdateReservationForm {
 
 export interface CreateRefuelForm {
   date: string;
-  amount: number;
-  cost: number;
-  odometer: number;
-  location: string;
+  fuel_amount: number;
+  price: number;
+  kilometrage_during_refuel: number;
+  gas_station: string;
   vehicle_id: number;
+  document_id: number;
+  user_id: number;
+  company_id: number;
 }
 
 export interface CreateCompanyForm {
