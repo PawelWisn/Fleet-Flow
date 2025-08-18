@@ -231,21 +231,6 @@ export default function VehicleDetailsPage() {
 					</div>
 				</div>
 
-				{/* Additional Information */}
-				<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-					<h3 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-						<div className="flex justify-between">
-							<span className="text-gray-600">Created:</span>
-							<span className="font-medium">{new Date(vehicle.created_at).toLocaleDateString()}</span>
-						</div>
-						<div className="flex justify-between">
-							<span className="text-gray-600">Last Updated:</span>
-							<span className="font-medium">{new Date(vehicle.updated_at).toLocaleDateString()}</span>
-						</div>
-					</div>
-				</div>
-
 				{/* Action Buttons */}
 				<div className="flex justify-start space-x-4">
 					<button onClick={() => router.push("/vehicles")} className="btn-secondary">

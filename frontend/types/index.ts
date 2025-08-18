@@ -41,8 +41,6 @@ export interface Vehicle {
   tire_type: 'summer' | 'winter' | 'all-season';
   company_id?: number;
   company?: Company;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Reservation {
