@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get -y install libpq-dev gcc python3-distutils
+RUN apt-get update && apt-get -y install libpq-dev gcc
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
