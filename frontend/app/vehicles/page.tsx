@@ -45,10 +45,17 @@ export default function VehiclesPage() {
 			try {
 				setLoading(true);
 				setError(null);
+				console.log("Fetching vehicles with:", {
+					page: currentPage,
+					size: pageSize,
+					search: debouncedSearchTerm,
+					status: filterStatus,
+				});
 				const response = await vehiclesApi.getAll({
 					page: currentPage,
 					size: pageSize,
 					search: debouncedSearchTerm || undefined,
+					status: filterStatus !== "all" ? filterStatus : undefined,
 				});
 				setVehicles(response.items || []);
 				setPaginationData(response);
@@ -62,7 +69,7 @@ export default function VehiclesPage() {
 		};
 
 		fetchVehicles();
-	}, [currentPage, pageSize, debouncedSearchTerm]);
+	}, [currentPage, pageSize, debouncedSearchTerm, filterStatus]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -78,10 +85,10 @@ export default function VehiclesPage() {
 		setCurrentPage(1); // Reset to first page when searching
 	};
 
-	const filteredVehicles = vehicles.filter((vehicle) => {
-		const matchesStatus = filterStatus === "all" || vehicle.availability === filterStatus;
-		return matchesStatus;
-	});
+	const handleStatusChange = (status: string) => {
+		setFilterStatus(status);
+		setCurrentPage(1); // Reset to first page when changing filter
+	};
 
 	return (
 		<DashboardLayout title="Vehicles" subtitle="Manage your fleet vehicles and their status">
@@ -156,7 +163,7 @@ export default function VehiclesPage() {
 									id="status"
 									className="input-field mt-1"
 									value={filterStatus}
-									onChange={(e) => setFilterStatus(e.target.value)}
+									onChange={(e) => handleStatusChange(e.target.value)}
 								>
 									<option value="all">All statuses</option>
 									<option value="available">Available</option>
@@ -173,7 +180,7 @@ export default function VehiclesPage() {
 				{/* Vehicles grid - only show when not loading */}
 				{!loading && (
 					<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-						{filteredVehicles.map((vehicle) => (
+						{vehicles.map((vehicle) => (
 							<div key={vehicle.id} className="card hover:shadow-md transition-shadow">
 								<div className="flex items-center justify-between mb-4">
 									<h3 className="text-lg font-medium text-gray-900">
@@ -228,7 +235,7 @@ export default function VehiclesPage() {
 				)}
 
 				{/* Empty state - only show when not loading and no vehicles */}
-				{!loading && filteredVehicles.length === 0 && !error && (
+				{!loading && vehicles.length === 0 && !error && (
 					<div className="text-center py-12">
 						<div className="text-gray-500">
 							<p className="text-lg font-medium">

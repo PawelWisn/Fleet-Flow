@@ -42,6 +42,7 @@ export const vehiclesApi = {
     size?: number;
     company_id?: number;
     search?: string;
+    status?: string;
   }): Promise<PaginatedResponse<Vehicle>> => api.get('/vehicles/', { params }).then(res => res.data),
   getById: (id: number): Promise<Vehicle> => api.get(`/vehicles/${id}/`).then(res => res.data),
   create: (data: CreateVehicleForm): Promise<Vehicle> => api.post('/vehicles/', data).then(res => res.data),

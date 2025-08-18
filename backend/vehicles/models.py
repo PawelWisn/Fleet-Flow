@@ -79,6 +79,13 @@ class Vehicle(VehicleBase, table=True):
         search_pattern = f"%{search_term}%"
         return query.filter(or_(cls.model.ilike(search_pattern), cls.brand.ilike(search_pattern), cls.registration_number.ilike(search_pattern)))
 
+    @classmethod
+    def with_status(cls, query: Select["Vehicle"], status: str) -> Select["Vehicle"]:
+        if not status:
+            return query
+
+        return query.filter(cls.availability == status)
+
     def __str__(self) -> str:
         return f"{self.brand.capitalize()} {self.model.capitalize()}"
 
