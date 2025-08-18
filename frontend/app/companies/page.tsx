@@ -22,13 +22,27 @@ import { Company, PaginatedResponse } from "@/types";
 export default function CompaniesPage() {
 	const router = useRouter();
 	const [companies, setCompanies] = useState<Company[]>([]);
-	const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<Company> | null>(null);
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Reset page when search term changes
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [debouncedSearchTerm]);
 
 	useEffect(() => {
 		const fetchCompanies = async () => {
@@ -37,9 +51,9 @@ export default function CompaniesPage() {
 				const response = await companiesApi.getAll({
 					page: currentPage,
 					size: pageSize,
+					search: debouncedSearchTerm || undefined,
 				});
 				setCompanies(response.items);
-				setFilteredCompanies(response.items);
 				setPaginationData(response);
 				setError(null);
 			} catch (error) {
@@ -52,17 +66,7 @@ export default function CompaniesPage() {
 		};
 
 		fetchCompanies();
-	}, [currentPage, pageSize]);
-
-	useEffect(() => {
-		const filtered = companies.filter(
-			(company) =>
-				company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				company.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				company.nip.includes(searchTerm),
-		);
-		setFilteredCompanies(filtered);
-	}, [searchTerm, companies]);
+	}, [currentPage, pageSize, debouncedSearchTerm]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -148,15 +152,11 @@ export default function CompaniesPage() {
 						</div>
 					</div>
 
-					{searchTerm && (
-						<div className="mt-4 text-sm text-gray-600">
-							Showing {filteredCompanies.length} of {companies.length} companies
-						</div>
-					)}
+					{searchTerm && <div className="mt-4 text-sm text-gray-600">Showing {companies.length} companies</div>}
 				</div>
 
 				{/* Companies List */}
-				{filteredCompanies.length === 0 ? (
+				{companies.length === 0 ? (
 					<div className="bg-white shadow-sm rounded-lg p-12 text-center">
 						<BuildingOfficeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 						<h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -177,7 +177,7 @@ export default function CompaniesPage() {
 					</div>
 				) : (
 					<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-						{filteredCompanies.map((company) => (
+						{companies.map((company) => (
 							<div
 								key={company.id}
 								className="bg-white shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow"

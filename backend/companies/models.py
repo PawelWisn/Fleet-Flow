@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from database import SQLModel
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Field, Relationship, select
 
@@ -40,6 +41,14 @@ class Company(CompanyBase, table=True):
         if not user.is_admin:
             qs = qs.filter(cls.users.any(User.id == user.id))
         return qs
+
+    @classmethod
+    def with_search(cls, query: Select["Company"], search_term: str) -> Select["Company"]:
+        if not search_term:
+            return query
+
+        search_pattern = f"%{search_term}%"
+        return query.filter(or_(cls.name.ilike(search_pattern), cls.nip.ilike(search_pattern)))
 
 
 class CompanyRead(CompanyBase):

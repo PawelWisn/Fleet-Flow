@@ -58,6 +58,7 @@ export const companiesApi = {
   getAll: (params?: {
     page?: number;
     size?: number;
+    search?: string;
   }): Promise<PaginatedResponse<Company>> => api.get('/companies/', { params }).then(res => res.data),
   getById: (id: number): Promise<Company> => api.get(`/companies/${id}/`).then(res => res.data),
   create: (data: CreateCompanyForm): Promise<Company> => api.post('/companies/', data).then(res => res.data),

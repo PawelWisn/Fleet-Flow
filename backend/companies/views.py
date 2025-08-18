@@ -1,6 +1,6 @@
-from commons import Page, get_from_qs_or_404
+from commons import Page, get_filters, get_from_qs_or_404
 from dependencies import LoginReqDep, SessionDep
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Query, Response, status
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.sql import Select
 from users.models import User
@@ -20,8 +20,10 @@ def get_queryset(request_user: User) -> Select[Company]:
 async def list_companies(
     session: SessionDep,
     request_user: LoginReqDep,
+    search: str = Query(None, description="Search by company name or NIP"),
 ) -> Page[CompanyRead]:
     qs = get_queryset(request_user)
+    qs = Company.with_search(qs, search)
     return paginate(session, qs)
 
 
