@@ -7,6 +7,7 @@ import { DocumentTextIcon, TruckIcon, UserIcon } from "@heroicons/react/24/outli
 import { documentsApi, vehiclesApi, usersApi } from "@/services/api";
 import { Document, CreateDocumentForm, UpdateDocumentForm, Vehicle, User } from "@/types";
 import LoadingSpinner from "./LoadingSpinner";
+import SearchableDropdown from "./SearchableDropdown";
 
 interface DocumentFormProps {
 	document?: Document;
@@ -26,8 +27,6 @@ const documentTypes = [
 export default function DocumentForm({ document, documentId, isEdit = false }: DocumentFormProps) {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
-	const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-	const [users, setUsers] = useState<User[]>([]);
 	const [loadingData, setLoadingData] = useState(true);
 	const [documentData, setDocumentData] = useState<Document | null>(document || null);
 
@@ -41,16 +40,36 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+	const searchVehicles = async (searchTerm: string, page: number) => {
+		const params: any = { page, size: 20 };
+		if (searchTerm) {
+			params.search = searchTerm;
+		}
+
+		const response = await vehiclesApi.getAll(params);
+		return {
+			items: response.items || [],
+			hasMore: response.page < response.pages,
+		};
+	};
+
+	const searchUsers = async (searchTerm: string, page: number) => {
+		const params: any = { page, size: 20 };
+		if (searchTerm) {
+			params.search = searchTerm;
+		}
+
+		const response = await usersApi.getAll(params);
+		return {
+			items: response.items || [],
+			hasMore: response.page < response.pages,
+		};
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
 				setLoadingData(true);
-
-				// Fetch vehicles and users
-				const [vehiclesResponse, usersResponse] = await Promise.all([vehiclesApi.getAll(), usersApi.getAll()]);
-
-				setVehicles(vehiclesResponse.items || []);
-				setUsers(usersResponse.items || []);
 
 				// If we have a documentId, fetch the document data
 				if (documentId) {
@@ -196,46 +215,34 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 						</div>
 
 						{/* Vehicle Selection */}
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-2">Vehicle *</label>
-							<div className="relative">
-								<TruckIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-								<select
-									value={formData.vehicle_id}
-									onChange={(e) => handleChange("vehicle_id", e.target.value)}
-									className="pl-10 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-									required
-								>
-									<option value="">Select a vehicle</option>
-									{vehicles.map((vehicle) => (
-										<option key={vehicle.id} value={vehicle.id}>
-											{vehicle.registration_number} - {vehicle.brand} {vehicle.model}
-										</option>
-									))}
-								</select>
-							</div>
-						</div>
+						<SearchableDropdown<Vehicle>
+							value={formData.vehicle_id}
+							onChange={(value) => handleChange("vehicle_id", value)}
+							onSearch={searchVehicles}
+							renderOption={(vehicle) => ({
+								value: vehicle.id.toString(),
+								label: `${vehicle.registration_number} - ${vehicle.brand} ${vehicle.model}`,
+							})}
+							placeholder="Select a vehicle"
+							label="Vehicle"
+							icon={<TruckIcon className="h-5 w-5" />}
+							required
+						/>
 
 						{/* User Selection */}
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-2">User *</label>
-							<div className="relative">
-								<UserIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-								<select
-									value={formData.user_id}
-									onChange={(e) => handleChange("user_id", e.target.value)}
-									className="pl-10 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-									required
-								>
-									<option value="">Select a user</option>
-									{users.map((user) => (
-										<option key={user.id} value={user.id}>
-											{user.name} ({user.email})
-										</option>
-									))}
-								</select>
-							</div>
-						</div>
+						<SearchableDropdown<User>
+							value={formData.user_id}
+							onChange={(value) => handleChange("user_id", value)}
+							onSearch={searchUsers}
+							renderOption={(user) => ({
+								value: user.id.toString(),
+								label: `${user.name} (${user.email})`,
+							})}
+							placeholder="Select a user"
+							label="User"
+							icon={<UserIcon className="h-5 w-5" />}
+							required
+						/>
 					</div>
 
 					{/* Description */}
