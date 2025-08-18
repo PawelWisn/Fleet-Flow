@@ -218,25 +218,26 @@ def seed_vehicles(conn):
     brands = ["Ford", "Mercedes", "Volvo", "Scania", "MAN", "DAF", "Iveco", "Renault", "Volkswagen", "Fiat", "Nissan", "Mitsubishi", "Isuzu", "Peugeot", "Citroen"]
     models = ["Transit", "Sprinter", "FH16", "R450", "TGX", "CF", "Daily", "Master", "Crafter", "Ducato", "NV200", "Canter", "NPR", "Boxer", "Jumper"]
     gearbox_types = ["MANUAL", "AUTO"]
-    availability_states = ["AVAILABLE", "INUSE", "BOOKED", "SERVICE"]
+    availability_states = ["AVAILABLE", "INUSE", "BOOKED", "SERVICE", "DECOMMISSIONED"]
     tire_types = ["ALLSEASON", "WINTER", "SUMMER"]
 
     additional_vehicles = []
-    for i in range(35):
-        company = companies[i % len(companies)]
-        id_number = f"VH{i+100:03d}"
-        vin = f"{random.randint(1, 9)}HGBH41JXMN{random.randint(100000, 999999)}"
-        weight = random.randint(2000, 15000)
-        registration = f"{''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))}-{random.randint(100, 999)}"
-        brand = random.choice(brands)
-        model = random.choice(models)
-        year = random.randint(2018, 2023)
-        kilometrage = random.randint(5000, 120000)
-        gearbox = random.choice(gearbox_types)
-        availability = random.choice(availability_states)
-        tire_type = random.choice(tire_types)
+    for status in availability_states:
+        for i in range(20):
+            company = companies[random.randint(0, len(companies) - 1)]
+            vehicle_num = len(additional_vehicles) + 100
+            id_number = f"VH{vehicle_num:03d}"
+            vin = f"{random.randint(1, 9)}HGBH41JXMN{random.randint(100000, 999999)}"
+            weight = random.randint(2000, 15000)
+            registration = f"{''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))}-{random.randint(100, 999)}"
+            brand = random.choice(brands)
+            model = random.choice(models)
+            year = random.randint(2018, 2023)
+            kilometrage = random.randint(5000, 120000)
+            gearbox = random.choice(gearbox_types)
+            tire_type = random.choice(tire_types)
 
-        additional_vehicles.append((id_number, vin, weight, registration, brand, model, year, kilometrage, gearbox, availability, tire_type, company["id"]))
+            additional_vehicles.append((id_number, vin, weight, registration, brand, model, year, kilometrage, gearbox, status, tire_type, company["id"]))
 
     all_vehicles = base_vehicles + additional_vehicles
 
@@ -251,7 +252,7 @@ def seed_vehicles(conn):
                 vehicle_data,
             )
         conn.commit()
-    print(f"Created {len(all_vehicles)} vehicles.")
+    print(f"Created {len(all_vehicles)} vehicles with 20+ vehicles per status.")
 
 
 def seed_documents(conn):
