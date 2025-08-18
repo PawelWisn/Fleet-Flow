@@ -24,7 +24,6 @@ def clear_existing_data(conn):
         for table in tables:
             cur.execute(f"DELETE FROM {table}")
 
-        # Delete all users and companies
         cur.execute("DELETE FROM users")
         cur.execute("DELETE FROM companies")
 
@@ -38,7 +37,6 @@ def seed_admin(conn):
     hashed_password = hash_password("FleetFlow1!")
 
     with conn.cursor() as cur:
-        # Create admin company
         cur.execute(
             """
             INSERT INTO companies (name, description, phone, post_code, address1, address2, city, country, nip, is_internal)
@@ -47,11 +45,9 @@ def seed_admin(conn):
             ("FleetFlow Admin", "System administration company", "555-0000", "00000", "Admin Building", "", "System", "Global", "0000000000", True),
         )
 
-        # Get admin company ID
         cur.execute("SELECT id FROM companies WHERE name = 'FleetFlow Admin'")
         admin_company_id = cur.fetchone()[0]
 
-        # Create admin user
         cur.execute(
             """
             INSERT INTO users (email, name, role, company_id, password)
@@ -67,7 +63,7 @@ def seed_admin(conn):
 def seed_companies(conn):
     print("Creating companies...")
 
-    companies_data = [
+    base_companies = [
         ("Logistics Express Ltd", "Leading logistics and transportation company", "555-0101", "12345", "123 Industrial Blvd", "Suite 400", "New York", "USA", "1234567890", True),
         ("City Transport Co", "Urban transportation services", "555-0202", "54321", "456 Metro Ave", "", "Chicago", "USA", "0987654321", True),
         ("FastMove Delivery", "Express delivery services", "555-0303", "67890", "789 Speed Lane", "Building C", "Los Angeles", "USA", "1122334455", True),
@@ -80,8 +76,33 @@ def seed_companies(conn):
         ("QuickFix Garage", "Fast vehicle repair and maintenance", "555-0707", "44444", "147 Repair Ave", "Unit 5", "Phoenix", "USA", "5544332211", False),
     ]
 
+    additional_companies = [
+        ("National Transport Solutions", "Nationwide transportation network", "555-0808", "55555", "258 National Hwy", "", "Denver", "USA", "6677889900", True),
+        ("Regional Freight Hub", "Regional cargo distribution center", "555-0909", "66666", "369 Distribution Dr", "Warehouse A", "Atlanta", "USA", "7788990011", True),
+        ("Urban Delivery Express", "City-wide delivery services", "555-1010", "77777", "147 Urban Ave", "", "Miami", "USA", "8899001122", True),
+        ("Interstate Logistics", "Cross-state transportation", "555-1111", "88888", "852 Interstate Blvd", "Suite 200", "Portland", "USA", "9900112233", True),
+        ("Continental Cargo", "Continental shipping solutions", "555-1212", "99999", "741 Continental Way", "", "Las Vegas", "USA", "0011223344", True),
+        ("Global Fleet Management", "International fleet services", "555-1313", "10101", "963 Global Plaza", "Floor 15", "Minneapolis", "USA", "1122334456", True),
+        ("Express Transit Corp", "Rapid transit solutions", "555-1414", "11111", "159 Express Lane", "", "Tampa", "USA", "2233445567", True),
+        ("Nationwide Shipping", "Coast-to-coast shipping", "555-1515", "12121", "357 Shipping Blvd", "Building B", "Kansas City", "USA", "3344556678", True),
+        ("Prime Logistics Group", "Premium logistics services", "555-1616", "13131", "468 Prime Ave", "", "Nashville", "USA", "4455667789", True),
+        ("Advanced Transport Co", "Advanced transportation technology", "555-1717", "14141", "579 Tech Drive", "Suite 300", "Austin", "USA", "5566778890", True),
+        ("Elite Delivery Services", "High-end delivery solutions", "555-1818", "15151", "680 Elite Way", "", "Charlotte", "USA", "6677889901", True),
+        ("Superior Freight Lines", "Superior cargo handling", "555-1919", "16161", "791 Superior St", "Floor 5", "Columbus", "USA", "7788990012", True),
+        ("Premier Transport Hub", "Premier transportation center", "555-2020", "17171", "802 Premier Blvd", "", "Indianapolis", "USA", "8899001123", True),
+        ("Excellence Logistics", "Excellence in transportation", "555-2121", "18181", "913 Excellence Ave", "Suite 150", "Memphis", "USA", "9900112234", True),
+        ("Pinnacle Fleet Solutions", "Peak performance fleet management", "555-2222", "19191", "024 Pinnacle Dr", "", "Baltimore", "USA", "0011223345", True),
+        ("Valero Fuel Station", "Comprehensive fuel services", "555-2323", "20202", "135 Fuel Depot Rd", "", "San Antonio", "USA", "1123344556", False),
+        ("MegaTech Auto Repair", "Advanced automotive repairs", "555-2424", "21212", "246 Tech Repair Ave", "Bay 3", "Oklahoma City", "USA", "2234455667", False),
+        ("Total Energy Solutions", "Complete energy services", "555-2525", "22222", "357 Energy Circle", "", "Virginia Beach", "USA", "3345566778", False),
+        ("ProFix Vehicle Services", "Professional vehicle maintenance", "555-2626", "23232", "468 Service Lane", "Unit 12", "Louisville", "USA", "4456677889", False),
+        ("MaxFuel Distribution", "Maximum fuel distribution network", "555-2727", "24242", "579 Distribution Way", "", "Albuquerque", "USA", "5567788990", False),
+    ]
+
+    all_companies = base_companies + additional_companies
+
     with conn.cursor() as cur:
-        for company in companies_data:
+        for company in all_companies:
             cur.execute(
                 """
                 INSERT INTO companies (name, description, phone, post_code, address1, address2, city, country, nip, is_internal)
@@ -90,7 +111,7 @@ def seed_companies(conn):
                 company,
             )
         conn.commit()
-    print("Companies created.")
+    print(f"Created {len(all_companies)} companies.")
 
 
 def seed_users(conn):
@@ -100,7 +121,7 @@ def seed_users(conn):
         cur.execute("SELECT id, name FROM companies ORDER BY id")
         companies = {row["name"]: row["id"] for row in cur.fetchall()}
 
-    users_data = [
+    base_users = [
         ("john.manager@logistics.com", "John Manager", "MANAGER", companies.get("Logistics Express Ltd", 1)),
         ("sarah.driver@logistics.com", "Sarah Driver", "WORKER", companies.get("Logistics Express Ltd", 1)),
         ("mike.transport@citytrans.com", "Mike Transport", "MANAGER", companies.get("City Transport Co", 2)),
@@ -117,10 +138,50 @@ def seed_users(conn):
         ("ava.dispatcher@logistics.com", "Ava Dispatcher", "WORKER", companies.get("Logistics Express Ltd", 1)),
     ]
 
+    additional_users = [
+        ("carlos.rodriguez@national.com", "Carlos Rodriguez", "MANAGER", companies.get("National Transport Solutions", 7)),
+        ("maria.gonzalez@national.com", "Maria Gonzalez", "WORKER", companies.get("National Transport Solutions", 7)),
+        ("robert.johnson@regional.com", "Robert Johnson", "MANAGER", companies.get("Regional Freight Hub", 8)),
+        ("jennifer.williams@regional.com", "Jennifer Williams", "WORKER", companies.get("Regional Freight Hub", 8)),
+        ("michael.brown@urban.com", "Michael Brown", "WORKER", companies.get("Urban Delivery Express", 9)),
+        ("jessica.davis@urban.com", "Jessica Davis", "WORKER", companies.get("Urban Delivery Express", 9)),
+        ("christopher.miller@interstate.com", "Christopher Miller", "MANAGER", companies.get("Interstate Logistics", 10)),
+        ("amanda.wilson@interstate.com", "Amanda Wilson", "WORKER", companies.get("Interstate Logistics", 10)),
+        ("daniel.moore@continental.com", "Daniel Moore", "MANAGER", companies.get("Continental Cargo", 11)),
+        ("ashley.taylor@continental.com", "Ashley Taylor", "WORKER", companies.get("Continental Cargo", 11)),
+        ("matthew.anderson@global.com", "Matthew Anderson", "MANAGER", companies.get("Global Fleet Management", 12)),
+        ("sarah.thomas@global.com", "Sarah Thomas", "WORKER", companies.get("Global Fleet Management", 12)),
+        ("joshua.jackson@express.com", "Joshua Jackson", "WORKER", companies.get("Express Transit Corp", 13)),
+        ("stephanie.white@express.com", "Stephanie White", "WORKER", companies.get("Express Transit Corp", 13)),
+        ("anthony.harris@nationwide.com", "Anthony Harris", "MANAGER", companies.get("Nationwide Shipping", 14)),
+        ("kimberly.martin@nationwide.com", "Kimberly Martin", "WORKER", companies.get("Nationwide Shipping", 14)),
+        ("mark.thompson@prime.com", "Mark Thompson", "MANAGER", companies.get("Prime Logistics Group", 15)),
+        ("michelle.garcia@prime.com", "Michelle Garcia", "WORKER", companies.get("Prime Logistics Group", 15)),
+        ("paul.martinez@advanced.com", "Paul Martinez", "WORKER", companies.get("Advanced Transport Co", 16)),
+        ("laura.robinson@advanced.com", "Laura Robinson", "WORKER", companies.get("Advanced Transport Co", 16)),
+        ("steven.clark@elite.com", "Steven Clark", "MANAGER", companies.get("Elite Delivery Services", 17)),
+        ("melissa.rodriguez@elite.com", "Melissa Rodriguez", "WORKER", companies.get("Elite Delivery Services", 17)),
+        ("andrew.lewis@superior.com", "Andrew Lewis", "MANAGER", companies.get("Superior Freight Lines", 18)),
+        ("deborah.lee@superior.com", "Deborah Lee", "WORKER", companies.get("Superior Freight Lines", 18)),
+        ("kenneth.walker@premier.com", "Kenneth Walker", "WORKER", companies.get("Premier Transport Hub", 19)),
+        ("lisa.hall@premier.com", "Lisa Hall", "WORKER", companies.get("Premier Transport Hub", 19)),
+        ("brian.allen@excellence.com", "Brian Allen", "MANAGER", companies.get("Excellence Logistics", 20)),
+        ("sandra.young@excellence.com", "Sandra Young", "WORKER", companies.get("Excellence Logistics", 20)),
+        ("gary.hernandez@pinnacle.com", "Gary Hernandez", "MANAGER", companies.get("Pinnacle Fleet Solutions", 21)),
+        ("donna.king@pinnacle.com", "Donna King", "WORKER", companies.get("Pinnacle Fleet Solutions", 21)),
+        ("ronald.wright@logistics.com", "Ronald Wright", "WORKER", companies.get("Logistics Express Ltd", 1)),
+        ("betty.lopez@citytrans.com", "Betty Lopez", "WORKER", companies.get("City Transport Co", 2)),
+        ("jerry.hill@fastmove.com", "Jerry Hill", "WORKER", companies.get("FastMove Delivery", 3)),
+        ("helen.scott@metro.com", "Helen Scott", "WORKER", companies.get("Metro Freight Solutions", 4)),
+        ("wayne.green@swift.com", "Wayne Green", "WORKER", companies.get("Swift Cargo Systems", 5)),
+        ("maria.adams@pacific.com", "Maria Adams", "WORKER", companies.get("Pacific Fleet Services", 6)),
+    ]
+
+    all_users = base_users + additional_users
     hashed_password = hash_password("FleetFlow1!")
 
     with conn.cursor() as cur:
-        for email, name, role, company_id in users_data:
+        for email, name, role, company_id in all_users:
             cur.execute(
                 """
                 INSERT INTO users (email, name, role, company_id, password)
@@ -129,7 +190,7 @@ def seed_users(conn):
                 (email, name, role, company_id, hashed_password),
             )
         conn.commit()
-    print("Users created.")
+    print(f"Created {len(all_users)} users.")
 
 
 def seed_vehicles(conn):
@@ -139,7 +200,7 @@ def seed_vehicles(conn):
         cur.execute("SELECT id, name FROM companies WHERE is_internal = true ORDER BY id")
         companies = cur.fetchall()
 
-    vehicles_data = [
+    base_vehicles = [
         ("FL001", "1HGBH41JXMN109186", 3500, "ABC-123", "Ford", "Transit", 2020, 45000, "MANUAL", "AVAILABLE", "ALLSEASON", companies[0]["id"]),
         ("FL002", "2HGBH41JXMN109187", 7500, "DEF-456", "Mercedes", "Sprinter", 2019, 62000, "AUTO", "INUSE", "ALLSEASON", companies[0]["id"]),
         ("FL003", "7HGBH41JXMN109192", 4000, "STU-901", "Iveco", "Daily", 2021, 32000, "MANUAL", "AVAILABLE", "WINTER", companies[0]["id"]),
@@ -154,8 +215,33 @@ def seed_vehicles(conn):
         ("PF001", "CHGBH41JXMN109197", 4500, "HIJ-456", "Mitsubishi", "Fuso Canter", 2022, 18000, "MANUAL", "AVAILABLE", "WINTER", companies[5]["id"]),
     ]
 
+    brands = ["Ford", "Mercedes", "Volvo", "Scania", "MAN", "DAF", "Iveco", "Renault", "Volkswagen", "Fiat", "Nissan", "Mitsubishi", "Isuzu", "Peugeot", "Citroen"]
+    models = ["Transit", "Sprinter", "FH16", "R450", "TGX", "CF", "Daily", "Master", "Crafter", "Ducato", "NV200", "Canter", "NPR", "Boxer", "Jumper"]
+    gearbox_types = ["MANUAL", "AUTO"]
+    availability_states = ["AVAILABLE", "INUSE", "BOOKED", "SERVICE"]
+    tire_types = ["ALLSEASON", "WINTER", "SUMMER"]
+
+    additional_vehicles = []
+    for i in range(35):
+        company = companies[i % len(companies)]
+        id_number = f"VH{i+100:03d}"
+        vin = f"{random.randint(1, 9)}HGBH41JXMN{random.randint(100000, 999999)}"
+        weight = random.randint(2000, 15000)
+        registration = f"{''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=3))}-{random.randint(100, 999)}"
+        brand = random.choice(brands)
+        model = random.choice(models)
+        year = random.randint(2018, 2023)
+        kilometrage = random.randint(5000, 120000)
+        gearbox = random.choice(gearbox_types)
+        availability = random.choice(availability_states)
+        tire_type = random.choice(tire_types)
+
+        additional_vehicles.append((id_number, vin, weight, registration, brand, model, year, kilometrage, gearbox, availability, tire_type, company["id"]))
+
+    all_vehicles = base_vehicles + additional_vehicles
+
     with conn.cursor() as cur:
-        for vehicle_data in vehicles_data:
+        for vehicle_data in all_vehicles:
             cur.execute(
                 """
                 INSERT INTO vehicles (id_number, vin, weight, registration_number, brand, model, production_year,
@@ -165,90 +251,67 @@ def seed_vehicles(conn):
                 vehicle_data,
             )
         conn.commit()
-    print("Vehicles created.")
+    print(f"Created {len(all_vehicles)} vehicles.")
 
 
 def seed_documents(conn):
     print("Creating documents...")
 
     with conn.cursor() as cur:
-        cur.execute("SELECT id FROM vehicles LIMIT 12")
+        cur.execute("SELECT id FROM vehicles")
         vehicles = [row[0] for row in cur.fetchall()]
 
-        cur.execute("SELECT id FROM users WHERE email != 'admin@example.com' LIMIT 12")
+        cur.execute("SELECT id FROM users WHERE email != 'admin@example.com'")
         users = [row[0] for row in cur.fetchall()]
 
-    documents_data = [
-        ("Vehicle Registration Certificate - ABC-123", "Official registration document for Ford Transit", "pdf", vehicles[0] if vehicles else 1, users[0] if users else 1),
-        (
-            "Insurance Policy - DEF-456",
-            "Comprehensive insurance policy for Mercedes Sprinter",
-            "pdf",
-            vehicles[1] if len(vehicles) > 1 else vehicles[0],
-            users[1] if len(users) > 1 else users[0],
-        ),
-        (
-            "Maintenance Manual - Fleet Vehicles",
-            "Standard maintenance procedures for all fleet vehicles",
-            "pdf",
-            vehicles[2] if len(vehicles) > 2 else vehicles[0],
-            users[2] if len(users) > 2 else users[0],
-        ),
-        ("Fuel Receipt - Shell Station", "Fuel purchase receipt template", "jpg", vehicles[3] if len(vehicles) > 3 else vehicles[0], users[3] if len(users) > 3 else users[0]),
-        (
-            "Driver License Verification",
-            "Driver license verification checklist",
-            "pdf",
-            vehicles[4] if len(vehicles) > 4 else vehicles[0],
-            users[4] if len(users) > 4 else users[0],
-        ),
-        (
-            "Safety Inspection Report",
-            "Monthly safety inspection report template",
-            "pdf",
-            vehicles[5] if len(vehicles) > 5 else vehicles[0],
-            users[5] if len(users) > 5 else users[0],
-        ),
-        (
-            "Vehicle Registration Certificate - STU-901",
-            "Official registration document for Iveco Daily",
-            "pdf",
-            vehicles[6] if len(vehicles) > 6 else vehicles[0],
-            users[6] if len(users) > 6 else users[0],
-        ),
-        (
-            "Maintenance Record - GHI-789",
-            "Service history for Volkswagen Crafter",
-            "pdf",
-            vehicles[7] if len(vehicles) > 7 else vehicles[0],
-            users[7] if len(users) > 7 else users[0],
-        ),
-        (
-            "Insurance Certificate - VWX-234",
-            "Coverage document for Scania R450",
-            "pdf",
-            vehicles[8] if len(vehicles) > 8 else vehicles[0],
-            users[8] if len(users) > 8 else users[0],
-        ),
-        (
-            "Driver Training Certificate",
-            "Professional driver certification document",
-            "pdf",
-            vehicles[9] if len(vehicles) > 9 else vehicles[0],
-            users[9] if len(users) > 9 else users[0],
-        ),
-        (
-            "Fleet Safety Manual",
-            "Comprehensive safety guidelines for fleet operations",
-            "pdf",
-            vehicles[10] if len(vehicles) > 10 else vehicles[0],
-            users[10] if len(users) > 10 else users[0],
-        ),
-        ("Fuel Purchase Agreement", "Contract with fuel supplier", "pdf", vehicles[11] if len(vehicles) > 11 else vehicles[0], users[11] if len(users) > 11 else users[0]),
+    base_documents = [
+        ("Vehicle Registration Certificate - ABC-123", "Official registration document for Ford Transit", "pdf"),
+        ("Insurance Policy - DEF-456", "Comprehensive insurance policy for Mercedes Sprinter", "pdf"),
+        ("Maintenance Manual - Fleet Vehicles", "Standard maintenance procedures for all fleet vehicles", "pdf"),
+        ("Fuel Receipt - Shell Station", "Fuel purchase receipt template", "jpg"),
+        ("Driver License Verification", "Driver license verification checklist", "pdf"),
+        ("Safety Inspection Report", "Monthly safety inspection report template", "pdf"),
+        ("Vehicle Registration Certificate - STU-901", "Official registration document for Iveco Daily", "pdf"),
+        ("Maintenance Record - GHI-789", "Service history for Volkswagen Crafter", "pdf"),
+        ("Insurance Certificate - VWX-234", "Coverage document for Scania R450", "pdf"),
+        ("Driver Training Certificate", "Professional driver certification document", "pdf"),
+        ("Fleet Safety Manual", "Comprehensive safety guidelines for fleet operations", "pdf"),
+        ("Fuel Purchase Agreement", "Contract with fuel supplier", "pdf"),
     ]
 
+    document_types = [
+        ("Vehicle Inspection Report", "Annual vehicle inspection certificate", "pdf"),
+        ("Insurance Claim Form", "Insurance claim documentation", "pdf"),
+        ("Maintenance Service Record", "Regular maintenance service documentation", "pdf"),
+        ("Driver Medical Certificate", "Driver medical fitness certificate", "pdf"),
+        ("Vehicle Purchase Agreement", "Vehicle purchase contract", "pdf"),
+        ("Fuel Card Authorization", "Fuel card usage authorization", "pdf"),
+        ("GPS Tracking Report", "Vehicle GPS tracking analysis", "pdf"),
+        ("Accident Report Form", "Vehicle accident documentation", "pdf"),
+        ("Emission Test Certificate", "Vehicle emission test results", "pdf"),
+        ("Vehicle Lease Agreement", "Commercial vehicle lease contract", "pdf"),
+        ("Driver Performance Review", "Driver performance evaluation", "pdf"),
+        ("Vehicle Warranty Document", "Manufacturer warranty information", "pdf"),
+        ("Compliance Certificate", "Regulatory compliance documentation", "pdf"),
+        ("Route Optimization Report", "Delivery route analysis", "pdf"),
+        ("Fuel Efficiency Report", "Vehicle fuel consumption analysis", "pdf"),
+    ]
+
+    additional_documents = []
+    for i in range(25):
+        doc_type = document_types[i % len(document_types)]
+        title = f"{doc_type[0]} #{i+100:03d}"
+        description = f"{doc_type[1]} - Generated document #{i+100}"
+        file_type = doc_type[2]
+        additional_documents.append((title, description, file_type))
+
+    all_documents = base_documents + additional_documents
+
     with conn.cursor() as cur:
-        for title, description, file_type, vehicle_id, user_id in documents_data:
+        for i, (title, description, file_type) in enumerate(all_documents):
+            vehicle_id = vehicles[i % len(vehicles)] if vehicles else 1
+            user_id = users[i % len(users)] if users else 1
+
             cur.execute(
                 """
                 INSERT INTO documents (title, description, file_type, vehicle_id, user_id, created_at, updated_at)
@@ -257,7 +320,7 @@ def seed_documents(conn):
                 (title, description, file_type, vehicle_id, user_id, datetime.now(), datetime.now()),
             )
         conn.commit()
-    print("Documents created.")
+    print(f"Created {len(all_documents)} documents.")
 
 
 def seed_refuels(conn):
@@ -273,19 +336,36 @@ def seed_refuels(conn):
         cur.execute("SELECT id FROM documents")
         documents = [row[0] for row in cur.fetchall()]
 
-    gas_stations = ["Shell Highway Station", "BP Downtown", "Exxon Industrial Park", "Chevron City Center", "Mobil Express", "Sunoco Main Street"]
+    gas_stations = [
+        "Shell Highway Station",
+        "BP Downtown",
+        "Exxon Industrial Park",
+        "Chevron City Center",
+        "Mobil Express",
+        "Sunoco Main Street",
+        "Valero Fuel Depot",
+        "Marathon Gas Station",
+        "Citgo Truck Stop",
+        "Phillips 66 Center",
+        "Speedway Fuel",
+        "Casey's General Store",
+        "Circle K Express",
+        "7-Eleven Fuel",
+        "Wawa Gas Station",
+        "QuikTrip Fuel Center",
+    ]
 
-    start_date = datetime.now() - timedelta(days=90)
+    start_date = datetime.now() - timedelta(days=180)
 
     with conn.cursor() as cur:
-        for i in range(100):
-            refuel_date = start_date + timedelta(days=random.randint(0, 90))
-            fuel_amount = round(random.uniform(30.0, 120.0), 2)
-            price = round(random.uniform(80.0, 300.0), 2)
-            kilometrage = random.randint(15000, 100000)
+        for i in range(250):
+            refuel_date = start_date + timedelta(days=random.randint(0, 180))
+            fuel_amount = round(random.uniform(25.0, 150.0), 2)
+            price = round(random.uniform(75.0, 400.0), 2)
+            kilometrage = random.randint(10000, 150000)
             gas_station = random.choice(gas_stations)
             vehicle_id = random.choice(vehicles)
-            document_id = random.choice(documents)
+            document_id = random.choice(documents) if documents else None
             user_id = random.choice(users)
 
             cur.execute(
@@ -297,7 +377,7 @@ def seed_refuels(conn):
             )
 
         conn.commit()
-    print("Refuel records created.")
+    print("Created 250 refuel records.")
 
 
 def seed_events(conn):
