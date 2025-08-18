@@ -47,7 +47,7 @@ services:
       watch:
         - path: ./frontend
           target: /home/app
-          action: sync
+          action: rebuild
           ignore:
             - node_modules/
     environment:
