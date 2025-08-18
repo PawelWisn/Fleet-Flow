@@ -94,7 +94,7 @@ class VehicleFuelUsageReportGenerator:
         headers = [
             [
                 Paragraph("Date", self.styles["ParagraphTitle"]),
-                Paragraph("Amount", self.styles["ParagraphTitle"]),
+                Paragraph("Amount [l]", self.styles["ParagraphTitle"]),
                 Paragraph("Price", self.styles["ParagraphTitle"]),
                 Paragraph("Kilometrage", self.styles["ParagraphTitle"]),
                 Paragraph("Person", self.styles["ParagraphTitle"]),
