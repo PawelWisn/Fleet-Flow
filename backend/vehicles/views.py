@@ -21,9 +21,12 @@ async def list_vehicles(
     session: SessionDep,
     request_user: LoginReqDep,
     company_id: int = Query(None),
+    search: str = Query(None, description="Search by model or registration number"),
 ) -> Page[VehicleRead]:
     filters = get_filters({"company_id": company_id})
     qs = get_queryset(request_user).filter_by(**filters)
+    qs = Vehicle.with_search(qs, search)
+
     return paginate(session, qs)
 
 

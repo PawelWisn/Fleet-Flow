@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -23,11 +23,21 @@ export default function VehiclesPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<Vehicle> | null>(null);
 	const router = useRouter();
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
 	// Fetch vehicles from API
 	useEffect(() => {
@@ -38,6 +48,7 @@ export default function VehiclesPage() {
 				const response = await vehiclesApi.getAll({
 					page: currentPage,
 					size: pageSize,
+					search: debouncedSearchTerm || undefined,
 				});
 				setVehicles(response.items || []);
 				setPaginationData(response);
@@ -51,7 +62,7 @@ export default function VehiclesPage() {
 		};
 
 		fetchVehicles();
-	}, [currentPage, pageSize]);
+	}, [currentPage, pageSize, debouncedSearchTerm]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -62,15 +73,14 @@ export default function VehiclesPage() {
 		setCurrentPage(1); // Reset to first page when changing page size
 	};
 
+	const handleSearchChange = (value: string) => {
+		setSearchTerm(value);
+		setCurrentPage(1); // Reset to first page when searching
+	};
+
 	const filteredVehicles = vehicles.filter((vehicle) => {
-		const matchesSearch =
-			vehicle.registration_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			vehicle.model.toLowerCase().includes(searchTerm.toLowerCase());
-
 		const matchesStatus = filterStatus === "all" || vehicle.availability === filterStatus;
-
-		return matchesSearch && matchesStatus;
+		return matchesStatus;
 	});
 
 	return (
@@ -131,9 +141,9 @@ export default function VehiclesPage() {
 										type="text"
 										id="search"
 										className="input-field pl-10"
-										placeholder="Search by registration, brand, or model"
+										placeholder="Search by registration or model"
 										value={searchTerm}
-										onChange={(e) => setSearchTerm(e.target.value)}
+										onChange={(e) => handleSearchChange(e.target.value)}
 									/>
 								</div>
 							</div>

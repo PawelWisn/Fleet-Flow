@@ -10,6 +10,7 @@ import {
 	BeakerIcon,
 	CalendarIcon,
 	UsersIcon,
+	MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { reportsApi, vehiclesApi, reservationsApi, refuelsApi, usersApi } from "@/services/api";
 import { RefuelStat, Vehicle, PaginatedResponse, Refuel } from "@/types";
@@ -34,6 +35,7 @@ export default function ReportsPage() {
 	});
 	const [loading, setLoading] = useState(true);
 	const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
+	const [vehicleSearchTerm, setVehicleSearchTerm] = useState("");
 	const [downloadingReport, setDownloadingReport] = useState(false);
 
 	useEffect(() => {
@@ -118,7 +120,7 @@ export default function ReportsPage() {
 			document.body.removeChild(link);
 			window.URL.revokeObjectURL(url);
 
-			toast.success("Report downloaded successfully");
+			toast.success("Vehicle fuel report downloaded successfully");
 		} catch (error: any) {
 			console.error("Error downloading report:", error);
 			if (error.response?.status === 403) {
@@ -130,6 +132,13 @@ export default function ReportsPage() {
 			setDownloadingReport(false);
 		}
 	};
+
+	const filteredVehicles = vehicles.filter(
+		(vehicle) =>
+			vehicle.registration_number.toLowerCase().includes(vehicleSearchTerm.toLowerCase()) ||
+			vehicle.model.toLowerCase().includes(vehicleSearchTerm.toLowerCase()) ||
+			vehicle.brand.toLowerCase().includes(vehicleSearchTerm.toLowerCase()),
+	);
 
 	const formatMonth = (monthYear: string) => {
 		const [year, month] = monthYear.split("-");
@@ -230,19 +239,33 @@ export default function ReportsPage() {
 					<div className="space-y-4">
 						<div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
 							<div className="flex-1">
-								<label className="block text-sm font-medium text-gray-700 mb-2">Select Vehicle</label>
-								<select
-									value={selectedVehicle || ""}
-									onChange={(e) => setSelectedVehicle(e.target.value ? parseInt(e.target.value) : null)}
-									className="input"
-								>
-									<option value="">Select a vehicle...</option>
-									{vehicles.map((vehicle) => (
-										<option key={vehicle.id} value={vehicle.id}>
-											{vehicle.brand} {vehicle.model} - {vehicle.registration_number}
-										</option>
-									))}
-								</select>
+								<label className="block text-sm font-medium text-gray-700 mb-2">Search and Select Vehicle</label>
+								<div className="space-y-2">
+									<div className="relative">
+										<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+											<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+										</div>
+										<input
+											type="text"
+											placeholder="Search by registration, brand, or model"
+											value={vehicleSearchTerm}
+											onChange={(e) => setVehicleSearchTerm(e.target.value)}
+											className="input-field pl-10"
+										/>
+									</div>
+									<select
+										value={selectedVehicle || ""}
+										onChange={(e) => setSelectedVehicle(e.target.value ? parseInt(e.target.value) : null)}
+										className="input-field"
+									>
+										<option value="">Select a vehicle...</option>
+										{filteredVehicles.map((vehicle) => (
+											<option key={vehicle.id} value={vehicle.id}>
+												{vehicle.brand} {vehicle.model} - {vehicle.registration_number}
+											</option>
+										))}
+									</select>
+								</div>
 							</div>
 							<div className="flex items-end">
 								<button
@@ -264,6 +287,14 @@ export default function ReportsPage() {
 								</button>
 							</div>
 						</div>
+
+						{filteredVehicles.length === 0 && vehicleSearchTerm && (
+							<div className="text-center py-8">
+								<TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
+								<h3 className="mt-2 text-sm font-medium text-gray-900">No vehicles found</h3>
+								<p className="mt-1 text-sm text-gray-500">No vehicles match your search criteria</p>
+							</div>
+						)}
 
 						{vehicles.length === 0 && (
 							<div className="text-center py-8">

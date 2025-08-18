@@ -2,6 +2,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
 from database import SQLModel
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Column
 from sqlmodel import Enum as EnumSQL
@@ -69,6 +70,14 @@ class Vehicle(VehicleBase, table=True):
         if not user.is_admin:
             return select(cls).filter(cls.company_id == user.company_id)
         return select(cls)
+
+    @classmethod
+    def with_search(cls, query: Select["Vehicle"], search_term: str) -> Select["Vehicle"]:
+        if not search_term:
+            return query
+
+        search_pattern = f"%{search_term}%"
+        return query.filter(or_(cls.model.ilike(search_pattern), cls.brand.ilike(search_pattern), cls.registration_number.ilike(search_pattern)))
 
     def __str__(self) -> str:
         return f"{self.brand.capitalize()} {self.model.capitalize()}"
