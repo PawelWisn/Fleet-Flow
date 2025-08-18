@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
@@ -19,6 +19,18 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import Pagination from "@/components/Pagination";
 import { usersApi } from "@/services/api";
 import { User, PaginatedResponse } from "@/types";
+
+// Simple debounce function
+function debounce<T extends (...args: any[]) => any>(func: T, delay: number) {
+	let timeoutId: NodeJS.Timeout;
+	const debounced = ((...args: any[]) => {
+		clearTimeout(timeoutId);
+		timeoutId = setTimeout(() => func(...args), delay);
+	}) as T & { cancel: () => void };
+
+	debounced.cancel = () => clearTimeout(timeoutId);
+	return debounced;
+}
 
 const getRoleBadgeColor = (role: string) => {
 	switch (role) {
@@ -56,30 +68,17 @@ export default function UsersPage() {
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<User> | null>(null);
 	const [roleFilter, setRoleFilter] = useState("all");
 
-	const fetchUsers = async () => {
+	const fetchUsers = useCallback(async () => {
 		try {
 			setLoading(true);
 			const response = await usersApi.getAll({
 				page: currentPage,
 				size: pageSize,
+				search: searchTerm || undefined,
+				role: roleFilter !== "all" ? roleFilter : undefined,
 			});
 
-			// Client-side filtering for search and role since backend might not support these filters yet
-			let filteredUsers = response.items || [];
-
-			if (searchTerm) {
-				filteredUsers = filteredUsers.filter(
-					(user) =>
-						user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-						user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-				);
-			}
-
-			if (roleFilter !== "all") {
-				filteredUsers = filteredUsers.filter((user) => user.role === roleFilter);
-			}
-
-			setUsers(filteredUsers);
+			setUsers(response.items || []);
 			setPaginationData(response);
 		} catch (error) {
 			console.error("Error fetching users:", error);
@@ -87,20 +86,29 @@ export default function UsersPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [currentPage, pageSize, searchTerm, roleFilter]);
+
+	// Debounced search function
+	const debouncedFetchUsers = useCallback(
+		debounce(() => {
+			setCurrentPage(1);
+			fetchUsers();
+		}, 300),
+		[fetchUsers],
+	);
 
 	useEffect(() => {
 		fetchUsers();
-	}, [currentPage, pageSize]);
+	}, [fetchUsers]);
 
 	useEffect(() => {
-		// Reset to first page when search term or role filter changes
-		if (currentPage !== 1) {
-			setCurrentPage(1);
-		} else {
-			fetchUsers();
+		if (searchTerm !== undefined || roleFilter !== "all") {
+			debouncedFetchUsers();
 		}
-	}, [searchTerm, roleFilter]);
+		return () => {
+			debouncedFetchUsers.cancel();
+		};
+	}, [searchTerm, roleFilter, debouncedFetchUsers]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);

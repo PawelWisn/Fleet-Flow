@@ -27,6 +27,8 @@ export const usersApi = {
   getAll: (params?: {
     page?: number;
     size?: number;
+    search?: string;
+    role?: string;
   }): Promise<PaginatedResponse<User>> => api.get('/users/', { params }).then(res => res.data),
   getById: (id: number): Promise<User> => api.get(`/users/${id}/`).then(res => res.data),
   getCurrentUser: (): Promise<User> => api.get('/users/me/').then(res => res.data),

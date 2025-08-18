@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from database import SQLModel
 from pydantic import field_validator, model_validator
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Column
 from sqlmodel import Enum as EnumSQL
@@ -45,6 +46,21 @@ class User(UserBase, table=True):
         if not user.is_admin:
             qs = qs.filter(cls.company_id == user.company_id).filter(cls.role != UserRole.ADMIN)
         return qs
+
+    @classmethod
+    def with_search(cls, query: Select["User"], search_term: str) -> Select["User"]:
+        if not search_term:
+            return query
+
+        search_pattern = f"%{search_term}%"
+        return query.filter(or_(cls.name.ilike(search_pattern), cls.email.ilike(search_pattern)))
+
+    @classmethod
+    def with_role(cls, query: Select["User"], role: str) -> Select["User"]:
+        if not role:
+            return query
+
+        return query.filter(cls.role == role)
 
     def get_subordinates(self) -> Select["User"]:
         if self.is_admin:

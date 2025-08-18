@@ -22,9 +22,13 @@ async def list_users(
     session: SessionDep,
     request_user: LoginReqDep,
     company_id: int = Query(None),
+    search: str = Query(None, description="Search by user name or email"),
+    role: str = Query(None, description="Filter by user role (admin, manager, worker)"),
 ) -> Page[UserRead]:
     filters = get_filters({"company_id": company_id})
     qs = get_queryset(request_user).filter_by(**filters)
+    qs = User.with_search(qs, search)
+    qs = User.with_role(qs, role)
     return paginate(session, qs)
 
 
