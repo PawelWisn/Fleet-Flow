@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import {
@@ -11,6 +11,8 @@ import {
 	CalendarIcon,
 	UsersIcon,
 	MagnifyingGlassIcon,
+	ChevronDownIcon,
+	CheckIcon,
 } from "@heroicons/react/24/outline";
 import { reportsApi, vehiclesApi, reservationsApi, refuelsApi, usersApi } from "@/services/api";
 import { RefuelStat, Vehicle, PaginatedResponse, Refuel } from "@/types";
@@ -37,6 +39,37 @@ export default function ReportsPage() {
 	const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
 	const [vehicleSearchTerm, setVehicleSearchTerm] = useState("");
 	const [downloadingReport, setDownloadingReport] = useState(false);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [vehicleSearchPage, setVehicleSearchPage] = useState(1);
+	const [vehicleSearchResults, setVehicleSearchResults] = useState<Vehicle[]>([]);
+	const [hasMoreVehicles, setHasMoreVehicles] = useState(false);
+	const [loadingMoreVehicles, setLoadingMoreVehicles] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	const searchVehicles = async (searchTerm: string, page: number = 1, append: boolean = false) => {
+		try {
+			setLoadingMoreVehicles(true);
+			const response = await vehiclesApi.getAll({
+				page,
+				size: 15,
+				search: searchTerm || undefined,
+			});
+
+			if (append) {
+				setVehicleSearchResults((prev) => [...prev, ...response.items]);
+			} else {
+				setVehicleSearchResults(response.items);
+			}
+
+			setHasMoreVehicles(response.items.length === 15);
+			return response.items;
+		} catch (error) {
+			console.error("Error searching vehicles:", error);
+			return [];
+		} finally {
+			setLoadingMoreVehicles(false);
+		}
+	};
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -51,11 +84,13 @@ export default function ReportsPage() {
 					console.warn("Failed to fetch fuel stats:", error);
 				}
 
-				// Fetch vehicles
+				// Fetch vehicles (initial load with no search)
 				try {
-					const vehiclesRes = await vehiclesApi.getAll();
-					setVehicles(vehiclesRes.items);
-					setDashboardStats((prev) => ({ ...prev, totalVehicles: vehiclesRes.total }));
+					const initialVehicles = await searchVehicles("", 1, false);
+					setVehicles(initialVehicles);
+					// Get dashboard stats with a separate call to get total count
+					const statsRes = await vehiclesApi.getAll({ page: 1, size: 1 });
+					setDashboardStats((prev) => ({ ...prev, totalVehicles: statsRes.total }));
 				} catch (error) {
 					console.warn("Failed to fetch vehicles:", error);
 				}
@@ -96,6 +131,31 @@ export default function ReportsPage() {
 		fetchData();
 	}, []);
 
+	// Handle click outside dropdown
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsDropdownOpen(false);
+				setVehicleSearchTerm("");
+				setVehicleSearchResults([]);
+				setVehicleSearchPage(1);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
+
+	// Search vehicles when search term changes
+	useEffect(() => {
+		if (isDropdownOpen) {
+			setVehicleSearchPage(1);
+			searchVehicles(vehicleSearchTerm, 1, false);
+		}
+	}, [vehicleSearchTerm, isDropdownOpen]);
+
 	const handleDownloadVehicleReport = async () => {
 		if (!selectedVehicle) {
 			toast.error("Please select a vehicle first");
@@ -133,12 +193,33 @@ export default function ReportsPage() {
 		}
 	};
 
-	const filteredVehicles = vehicles.filter(
-		(vehicle) =>
-			vehicle.registration_number.toLowerCase().includes(vehicleSearchTerm.toLowerCase()) ||
-			vehicle.model.toLowerCase().includes(vehicleSearchTerm.toLowerCase()) ||
-			vehicle.brand.toLowerCase().includes(vehicleSearchTerm.toLowerCase()),
-	);
+	// Use search results when dropdown is open, otherwise use regular vehicles
+	const displayVehicles = isDropdownOpen ? vehicleSearchResults : vehicles;
+
+	const selectedVehicleData =
+		vehicles.find((v) => v.id === selectedVehicle) || vehicleSearchResults.find((v) => v.id === selectedVehicle);
+
+	const handleVehicleSelect = (vehicle: Vehicle) => {
+		setSelectedVehicle(vehicle.id);
+		setVehicleSearchTerm("");
+		setIsDropdownOpen(false);
+		setVehicleSearchResults([]);
+	};
+
+	const handleLoadMoreVehicles = async () => {
+		if (!loadingMoreVehicles && hasMoreVehicles) {
+			const nextPage = vehicleSearchPage + 1;
+			setVehicleSearchPage(nextPage);
+			await searchVehicles(vehicleSearchTerm, nextPage, true);
+		}
+	};
+
+	const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+		const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+		if (scrollHeight - scrollTop <= clientHeight + 5 && hasMoreVehicles && !loadingMoreVehicles) {
+			handleLoadMoreVehicles();
+		}
+	};
 
 	const formatMonth = (monthYear: string) => {
 		const [year, month] = monthYear.split("-");
@@ -240,31 +321,63 @@ export default function ReportsPage() {
 						<div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
 							<div className="flex-1">
 								<label className="block text-sm font-medium text-gray-700 mb-2">Search and Select Vehicle</label>
-								<div className="space-y-2">
-									<div className="relative">
-										<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-											<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+								<div className="relative" ref={dropdownRef}>
+									<div
+										className="input-field cursor-pointer flex items-center justify-between"
+										onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+									>
+										<div className="flex items-center">
+											<MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-3" />
+											<span className={selectedVehicleData ? "text-gray-900" : "text-gray-500"}>
+												{selectedVehicleData
+													? `${selectedVehicleData.brand} ${selectedVehicleData.model} - ${selectedVehicleData.registration_number}`
+													: "Search and select a vehicle..."}
+											</span>
 										</div>
-										<input
-											type="text"
-											placeholder="Search by registration, brand, or model"
-											value={vehicleSearchTerm}
-											onChange={(e) => setVehicleSearchTerm(e.target.value)}
-											className="input-field pl-10"
+										<ChevronDownIcon
+											className={`h-5 w-5 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
 										/>
 									</div>
-									<select
-										value={selectedVehicle || ""}
-										onChange={(e) => setSelectedVehicle(e.target.value ? parseInt(e.target.value) : null)}
-										className="input-field"
-									>
-										<option value="">Select a vehicle...</option>
-										{filteredVehicles.map((vehicle) => (
-											<option key={vehicle.id} value={vehicle.id}>
-												{vehicle.brand} {vehicle.model} - {vehicle.registration_number}
-											</option>
-										))}
-									</select>
+
+									{isDropdownOpen && (
+										<div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+											<div className="p-2">
+												<input
+													type="text"
+													placeholder="Search vehicles..."
+													value={vehicleSearchTerm}
+													onChange={(e) => setVehicleSearchTerm(e.target.value)}
+													className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													autoFocus
+												/>
+											</div>
+											<div className="max-h-40 overflow-auto" onScroll={handleScroll}>
+												{displayVehicles.length > 0 ? (
+													displayVehicles.map((vehicle) => (
+														<div
+															key={vehicle.id}
+															className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+															onClick={() => handleVehicleSelect(vehicle)}
+														>
+															<span className="text-sm">
+																{vehicle.brand} {vehicle.model} - {vehicle.registration_number}
+															</span>
+															{selectedVehicle === vehicle.id && <CheckIcon className="h-4 w-4 text-blue-600" />}
+														</div>
+													))
+												) : (
+													<div className="px-3 py-2 text-sm text-gray-500">
+														{loadingMoreVehicles ? "Searching..." : "No vehicles found"}
+													</div>
+												)}
+												{loadingMoreVehicles && displayVehicles.length > 0 && (
+													<div className="px-3 py-2 text-center">
+														<LoadingSpinner />
+													</div>
+												)}
+											</div>
+										</div>
+									)}
 								</div>
 							</div>
 							<div className="flex items-end">
@@ -288,7 +401,7 @@ export default function ReportsPage() {
 							</div>
 						</div>
 
-						{filteredVehicles.length === 0 && vehicleSearchTerm && (
+						{vehicleSearchResults.length === 0 && vehicleSearchTerm && !loadingMoreVehicles && (
 							<div className="text-center py-8">
 								<TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
 								<h3 className="mt-2 text-sm font-medium text-gray-900">No vehicles found</h3>
