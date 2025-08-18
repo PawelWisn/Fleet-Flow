@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -9,19 +9,6 @@ import { refuelsApi } from "@/services/api";
 import { PlusIcon, EyeIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Refuel, PaginatedResponse } from "@/types";
 import toast from "react-hot-toast";
-
-// Simple debounce function
-function debounce<T extends (...args: any[]) => any>(func: T, delay: number) {
-	let timeoutId: NodeJS.Timeout;
-	const debounced = ((...args: any[]) => {
-		clearTimeout(timeoutId);
-		timeoutId = setTimeout(() => func(...args), delay);
-	}) as T & { cancel: () => void };
-
-	debounced.cancel = () => clearTimeout(timeoutId);
-	return debounced;
-}
-
 export default function RefuelsPage() {
 	const router = useRouter();
 	const [refuels, setRefuels] = useState<Refuel[]>([]);
@@ -30,18 +17,26 @@ export default function RefuelsPage() {
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<Refuel> | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-	const fetchRefuels = useCallback(
-		async (resetPage = false) => {
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Fetch refuels from API
+	useEffect(() => {
+		const fetchRefuels = async () => {
 			try {
 				setLoading(true);
-				const page = resetPage ? 1 : currentPage;
-				if (resetPage) setCurrentPage(1);
-
 				const response: PaginatedResponse<Refuel> = await refuelsApi.getAll({
-					page,
+					page: currentPage,
 					size: pageSize,
-					search: searchTerm || undefined,
+					search: debouncedSearchTerm || undefined,
 				});
 				setRefuels(response.items);
 				setPaginationData(response);
@@ -51,28 +46,10 @@ export default function RefuelsPage() {
 			} finally {
 				setLoading(false);
 			}
-		},
-		[currentPage, pageSize, searchTerm],
-	);
-
-	// Debounced search function
-	const debouncedSearch = useCallback(
-		debounce(() => {
-			fetchRefuels(true);
-		}, 300),
-		[fetchRefuels],
-	);
-
-	useEffect(() => {
-		fetchRefuels();
-	}, [currentPage, pageSize]);
-
-	useEffect(() => {
-		debouncedSearch();
-		return () => {
-			debouncedSearch.cancel();
 		};
-	}, [searchTerm, debouncedSearch]);
+
+		fetchRefuels();
+	}, [currentPage, pageSize, debouncedSearchTerm]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -80,7 +57,12 @@ export default function RefuelsPage() {
 
 	const handlePageSizeChange = (size: number) => {
 		setPageSize(size);
-		setCurrentPage(1);
+		setCurrentPage(1); // Reset to first page when changing page size
+	};
+
+	const handleSearchChange = (value: string) => {
+		setSearchTerm(value);
+		setCurrentPage(1); // Reset to first page when searching
 	};
 
 	const handleDelete = async (refuelId: number) => {
@@ -88,7 +70,10 @@ export default function RefuelsPage() {
 			try {
 				await refuelsApi.delete(refuelId);
 				toast.success("Refuel record deleted successfully");
-				fetchRefuels();
+				// Refetch by updating search term temporarily
+				const currentSearch = debouncedSearchTerm;
+				setDebouncedSearchTerm("");
+				setTimeout(() => setDebouncedSearchTerm(currentSearch), 50);
 			} catch (error) {
 				console.error("Error deleting refuel:", error);
 				toast.error("Failed to delete refuel record");
@@ -135,7 +120,7 @@ export default function RefuelsPage() {
 							type="text"
 							placeholder="Search by vehicle brand, model or driver..."
 							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
+							onChange={(e) => handleSearchChange(e.target.value)}
 							className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
 						/>
 					</div>

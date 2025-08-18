@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
@@ -19,19 +19,6 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import Pagination from "@/components/Pagination";
 import { usersApi } from "@/services/api";
 import { User, PaginatedResponse } from "@/types";
-
-// Simple debounce function
-function debounce<T extends (...args: any[]) => any>(func: T, delay: number) {
-	let timeoutId: NodeJS.Timeout;
-	const debounced = ((...args: any[]) => {
-		clearTimeout(timeoutId);
-		timeoutId = setTimeout(() => func(...args), delay);
-	}) as T & { cancel: () => void };
-
-	debounced.cancel = () => clearTimeout(timeoutId);
-	return debounced;
-}
-
 const getRoleBadgeColor = (role: string) => {
 	switch (role) {
 		case "admin":
@@ -63,52 +50,45 @@ export default function UsersPage() {
 	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<User> | null>(null);
 	const [roleFilter, setRoleFilter] = useState("all");
 
-	const fetchUsers = useCallback(async () => {
-		try {
-			setLoading(true);
-			const response = await usersApi.getAll({
-				page: currentPage,
-				size: pageSize,
-				search: searchTerm || undefined,
-				role: roleFilter !== "all" ? roleFilter : undefined,
-			});
-
-			setUsers(response.items || []);
-			setPaginationData(response);
-		} catch (error) {
-			console.error("Error fetching users:", error);
-			toast.error("Failed to load users");
-		} finally {
-			setLoading(false);
-		}
-	}, [currentPage, pageSize, searchTerm, roleFilter]);
-
-	// Debounced search function
-	const debouncedFetchUsers = useCallback(
-		debounce(() => {
-			setCurrentPage(1);
-			fetchUsers();
-		}, 300),
-		[fetchUsers],
-	);
-
+	// Debounce search term
 	useEffect(() => {
-		fetchUsers();
-	}, [fetchUsers]);
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
 
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Fetch users from API
 	useEffect(() => {
-		if (searchTerm !== undefined || roleFilter !== "all") {
-			debouncedFetchUsers();
-		}
-		return () => {
-			debouncedFetchUsers.cancel();
+		const fetchUsers = async () => {
+			try {
+				setLoading(true);
+				const response = await usersApi.getAll({
+					page: currentPage,
+					size: pageSize,
+					search: debouncedSearchTerm || undefined,
+					role: roleFilter !== "all" ? roleFilter : undefined,
+				});
+
+				setUsers(response.items || []);
+				setPaginationData(response);
+			} catch (error) {
+				console.error("Error fetching users:", error);
+				toast.error("Failed to load users");
+			} finally {
+				setLoading(false);
+			}
 		};
-	}, [searchTerm, roleFilter, debouncedFetchUsers]);
+
+		fetchUsers();
+	}, [currentPage, pageSize, debouncedSearchTerm, roleFilter]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -116,17 +96,17 @@ export default function UsersPage() {
 
 	const handlePageSizeChange = (size: number) => {
 		setPageSize(size);
-		setCurrentPage(1);
+		setCurrentPage(1); // Reset to first page when changing page size
 	};
 
-	const handleSearch = (e: React.FormEvent) => {
-		e.preventDefault();
-		setCurrentPage(1);
+	const handleSearchChange = (value: string) => {
+		setSearchTerm(value);
+		setCurrentPage(1); // Reset to first page when searching
 	};
 
 	const handleRoleFilter = (role: string) => {
 		setRoleFilter(role);
-		setCurrentPage(1);
+		setCurrentPage(1); // Reset to first page when changing filter
 	};
 
 	const handleDelete = async (userId: number) => {
@@ -137,7 +117,10 @@ export default function UsersPage() {
 		try {
 			await usersApi.delete(userId);
 			toast.success("User deleted successfully!");
-			fetchUsers();
+			// Refetch by updating search term temporarily
+			const currentSearch = debouncedSearchTerm;
+			setDebouncedSearchTerm("");
+			setTimeout(() => setDebouncedSearchTerm(currentSearch), 50);
 		} catch (error) {
 			console.error("Error deleting user:", error);
 			toast.error("Failed to delete user");
@@ -165,24 +148,18 @@ export default function UsersPage() {
 
 					{/* Filters and Search */}
 					<div className="flex flex-col sm:flex-row gap-4">
-						<form onSubmit={handleSearch} className="flex gap-4 flex-1">
+						<div className="flex gap-4 flex-1">
 							<div className="flex-1 relative">
 								<MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
 								<input
 									type="text"
 									placeholder="Search users..."
 									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
+									onChange={(e) => handleSearchChange(e.target.value)}
 									className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
 								/>
 							</div>
-							<button
-								type="submit"
-								className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-							>
-								Search
-							</button>
-						</form>
+						</div>
 						<select
 							value={roleFilter}
 							onChange={(e) => handleRoleFilter(e.target.value)}
