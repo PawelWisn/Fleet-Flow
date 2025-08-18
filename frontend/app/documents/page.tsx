@@ -15,50 +15,63 @@ import {
 } from "@heroicons/react/24/outline";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
 import { documentsApi } from "@/services/api";
-import { Document } from "@/types";
+import { Document, PaginatedResponse } from "@/types";
 
 export default function DocumentsPage() {
 	const router = useRouter();
 	const [documents, setDocuments] = useState<Document[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
-	const [totalItems, setTotalItems] = useState(0);
-	const itemsPerPage = 10;
+	const [pageSize, setPageSize] = useState(15);
+	const [paginationData, setPaginationData] = useState<PaginatedResponse<Document> | null>(null);
 
-	const fetchDocuments = async (page = 1, search = "") => {
-		try {
-			setLoading(true);
-			const response = await documentsApi.getAll({
-				page,
-				size: itemsPerPage,
-			});
-			setDocuments(response.items || []);
-			setTotalPages(response.pages || 1);
-			setTotalItems(response.total || 0);
-			setCurrentPage(page);
-		} catch (error) {
-			console.error("Error fetching documents:", error);
-			toast.error("Failed to load documents");
-		} finally {
-			setLoading(false);
-		}
-	};
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Reset page when search term changes
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [debouncedSearchTerm]);
 
 	useEffect(() => {
-		fetchDocuments(1, searchTerm);
-	}, []);
+		const fetchDocuments = async () => {
+			try {
+				setLoading(true);
+				const response = await documentsApi.getAll({
+					page: currentPage,
+					size: pageSize,
+					search: debouncedSearchTerm || undefined,
+				});
+				setDocuments(response.items || []);
+				setPaginationData(response);
+			} catch (error) {
+				console.error("Error fetching documents:", error);
+				toast.error("Failed to load documents");
+			} finally {
+				setLoading(false);
+			}
+		};
 
-	const handleSearch = (e: React.FormEvent) => {
-		e.preventDefault();
-		setCurrentPage(1);
-		fetchDocuments(1, searchTerm);
-	};
+		fetchDocuments();
+	}, [currentPage, pageSize, debouncedSearchTerm]);
 
 	const handlePageChange = (page: number) => {
-		fetchDocuments(page, searchTerm);
+		setCurrentPage(page);
+	};
+
+	const handlePageSizeChange = (size: number) => {
+		setPageSize(size);
+		setCurrentPage(1); // Reset to first page when changing page size
 	};
 
 	const handleDelete = async (documentId: number) => {
@@ -69,7 +82,14 @@ export default function DocumentsPage() {
 		try {
 			await documentsApi.delete(documentId);
 			toast.success("Document deleted successfully!");
-			fetchDocuments(currentPage, searchTerm);
+			// Refetch the current page
+			const response = await documentsApi.getAll({
+				page: currentPage,
+				size: pageSize,
+				search: debouncedSearchTerm || undefined,
+			});
+			setDocuments(response.items || []);
+			setPaginationData(response);
 		} catch (error) {
 			console.error("Error deleting document:", error);
 			toast.error("Failed to delete document");
@@ -93,64 +113,6 @@ export default function DocumentsPage() {
 		}
 	};
 
-	const renderPagination = () => {
-		if (totalPages <= 1) return null;
-
-		const pages = [];
-		const maxVisiblePages = 5;
-		let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-		let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-		if (endPage - startPage < maxVisiblePages - 1) {
-			startPage = Math.max(1, endPage - maxVisiblePages + 1);
-		}
-
-		for (let i = startPage; i <= endPage; i++) {
-			pages.push(
-				<button
-					key={i}
-					onClick={() => handlePageChange(i)}
-					className={`px-3 py-2 rounded-md text-sm font-medium ${
-						i === currentPage ? "bg-blue-500 text-white" : "text-gray-700 hover:bg-gray-100"
-					}`}
-				>
-					{i}
-				</button>,
-			);
-		}
-
-		return (
-			<div className="flex items-center justify-between px-4 py-3 sm:px-6">
-				<div className="flex justify-between flex-1 sm:hidden">
-					<button
-						onClick={() => handlePageChange(currentPage - 1)}
-						disabled={currentPage === 1}
-						className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-					>
-						Previous
-					</button>
-					<button
-						onClick={() => handlePageChange(currentPage + 1)}
-						disabled={currentPage === totalPages}
-						className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-					>
-						Next
-					</button>
-				</div>
-				<div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-					<div>
-						<p className="text-sm text-gray-700">
-							Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-							<span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
-							<span className="font-medium">{totalItems}</span> results
-						</p>
-					</div>
-					<div className="flex space-x-1">{pages}</div>
-				</div>
-			</div>
-		);
-	};
-
 	return (
 		<DashboardLayout>
 			<div className="space-y-6">
@@ -169,25 +131,31 @@ export default function DocumentsPage() {
 					</button>
 				</div>
 
-				{/* Search */}
-				<form onSubmit={handleSearch} className="flex gap-4">
-					<div className="flex-1 relative">
-						<MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-						<input
-							type="text"
-							placeholder="Search documents..."
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-						/>
+				{/* Search and Filters */}
+				{!loading && (
+					<div className="card">
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							<div className="sm:col-span-2 lg:col-span-3">
+								<label htmlFor="search" className="block text-sm font-medium text-gray-700">
+									Search documents
+								</label>
+								<div className="mt-1 relative">
+									<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+										<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+									</div>
+									<input
+										type="text"
+										id="search"
+										className="input-field pl-10"
+										placeholder="Search by title, description, vehicle plates, or user name"
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+									/>
+								</div>
+							</div>
+						</div>
 					</div>
-					<button
-						type="submit"
-						className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-					>
-						Search
-					</button>
-				</form>
+				)}
 
 				{/* Documents List */}
 				<div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -229,16 +197,16 @@ export default function DocumentsPage() {
 														>
 															{document.file_type}
 														</span>
-														{document.vehicle_id && (
+														{document.vehicle && (
 															<span className="flex items-center">
 																<TruckIcon className="h-3 w-3 mr-1" />
-																Vehicle {document.vehicle_id}
+																{document.vehicle.registration_number}
 															</span>
 														)}
-														{document.user_id && (
+														{document.user && (
 															<span className="flex items-center">
 																<UserIcon className="h-3 w-3 mr-1" />
-																User {document.user_id}
+																{document.user.name}
 															</span>
 														)}
 													</div>
@@ -271,10 +239,21 @@ export default function DocumentsPage() {
 									</li>
 								))}
 							</ul>
-							{renderPagination()}
 						</>
 					)}
 				</div>
+
+				{/* Pagination */}
+				{!loading && paginationData && paginationData.pages > 1 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={paginationData.pages}
+						totalItems={paginationData.total}
+						itemsPerPage={pageSize}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
+					/>
+				)}
 			</div>
 		</DashboardLayout>
 	);

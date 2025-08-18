@@ -92,6 +92,8 @@ class UserRead(UserBase):
 
 class UserNestedRead(UserBase):
     id: int
+    name: str
+    email: str
 
 
 class UserCreate(UserBase):

@@ -134,6 +134,7 @@ export const documentsApi = {
     size?: number;
     vehicle_id?: number;
     user_id?: number;
+    search?: string;
   }): Promise<PaginatedResponse<Document>> => api.get('/documents/', { params }).then(res => res.data),
 
   getById: (id: number): Promise<Document> => api.get(`/documents/${id}/`).then(res => res.data),

@@ -103,6 +103,9 @@ class VehicleRead(VehicleBase):
 
 class VehicleNestedRead(VehicleBase):
     id: int
+    brand: str
+    model: str
+    registration_number: str
 
 
 class VehicleCreate(VehicleBase):

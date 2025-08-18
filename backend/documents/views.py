@@ -3,7 +3,7 @@ from typing import Optional
 
 from commons import get_filters, get_from_qs_or_404, validate_obj_reference
 from dependencies import LoginReqDep, SessionDep
-from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -26,9 +26,11 @@ def get_queryset(request_user: User) -> Select[Document]:
 async def list_documents(
     session: SessionDep,
     request_user: LoginReqDep,
+    search: str = Query(None, description="Search by document title, description, vehicle plates, or user name"),
 ) -> Page[DocumentRead]:
     filters = get_filters({})
     qs = get_queryset(request_user).filter_by(**filters)
+    qs = Document.with_search(qs, search)
     return paginate(session, qs)
 
 

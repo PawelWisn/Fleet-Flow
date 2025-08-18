@@ -3,6 +3,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional, Union
 
 from database import SQLModel
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Column
 from sqlmodel import Enum as EnumSQL
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     from events.models import Event, EventNestedRead
     from insurrances.models import Insurrance, InsurranceNestedRead
     from refuels.models import Refuel, RefuelNestedRead
-    from users.models import User
+    from users.models import User, UserNestedRead
     from vehicles.models import Vehicle, VehicleNestedRead
 
 
@@ -41,7 +42,6 @@ class Document(DocumentBase, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    # Relationships
     vehicle: "Vehicle" = Relationship(back_populates="documents")
     user: "User" = Relationship(back_populates="documents")
     refuels: list["Refuel"] = Relationship(back_populates="document", cascade_delete=True)
@@ -51,6 +51,23 @@ class Document(DocumentBase, table=True):
     @classmethod
     def for_user(cls, user: "User") -> Select["Document"]:
         return select(cls)
+
+    @classmethod
+    def with_search(cls, qs: Select["Document"], search: Optional[str]) -> Select["Document"]:
+        if not search:
+            return qs
+
+        search_pattern = f"%{search}%"
+
+        from users.models import User
+        from vehicles.models import Vehicle
+
+        qs = qs.join(Vehicle, cls.vehicle_id == Vehicle.id)
+        qs = qs.join(User, cls.user_id == User.id)
+
+        return qs.where(
+            or_(cls.title.ilike(search_pattern), cls.description.ilike(search_pattern), Vehicle.registration_number.ilike(search_pattern), User.name.ilike(search_pattern))
+        )
 
 
 class DocumentRead(DocumentBase):
@@ -72,6 +89,8 @@ class DocumentNestedRead(SQLModel):
     user_id: int
     created_at: datetime
     updated_at: datetime
+    vehicle: Optional["VehicleNestedRead"] = None
+    user: Optional["UserNestedRead"] = None
 
 
 class DocumentCreate(SQLModel):
