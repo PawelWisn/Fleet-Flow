@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from database import SQLModel
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Field, Relationship, select
 
@@ -39,6 +40,17 @@ class Refuel(RefuelBase, table=True):
         if user.is_manager:
             return qs.join(User).filter(User.company_id == user.company_id)
         return qs.join(User).filter(cls.user_id == user.id)
+
+    @classmethod
+    def with_search(cls, query: Select["Refuel"], search_term: str) -> Select["Refuel"]:
+        from users.models import User
+        from vehicles.models import Vehicle
+
+        if not search_term:
+            return query
+
+        search_pattern = f"%{search_term}%"
+        return query.join(Vehicle).join(User).filter(or_(Vehicle.brand.ilike(search_pattern), Vehicle.model.ilike(search_pattern), User.name.ilike(search_pattern)))
 
 
 class RefuelRead(RefuelBase):

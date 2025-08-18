@@ -24,9 +24,11 @@ async def list_refuels(
     vehicle_id: int = Query(None),
     document_id: int = Query(None),
     user_id: int = Query(None),
+    search: str = Query(None, description="Search by vehicle brand, model or user name"),
 ) -> Page[RefuelRead]:
     filters = get_filters({"vehicle_id": vehicle_id, "document_id": document_id, "user_id": user_id})
     qs = get_queryset(request_user).filter_by(**filters)
+    qs = Refuel.with_search(qs, search)
     return paginate(session, qs)
 
 

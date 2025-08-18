@@ -1,14 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Pagination from "@/components/Pagination";
 import { refuelsApi } from "@/services/api";
-import { PlusIcon, EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, EyeIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Refuel, PaginatedResponse } from "@/types";
 import toast from "react-hot-toast";
+
+// Simple debounce function
+function debounce<T extends (...args: any[]) => any>(func: T, delay: number) {
+	let timeoutId: NodeJS.Timeout;
+	const debounced = ((...args: any[]) => {
+		clearTimeout(timeoutId);
+		timeoutId = setTimeout(() => func(...args), delay);
+	}) as T & { cancel: () => void };
+
+	debounced.cancel = () => clearTimeout(timeoutId);
+	return debounced;
+}
 
 export default function RefuelsPage() {
 	const router = useRouter();
@@ -17,27 +29,50 @@ export default function RefuelsPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<Refuel> | null>(null);
+	const [searchTerm, setSearchTerm] = useState("");
 
-	const fetchRefuels = async () => {
-		try {
-			setLoading(true);
-			const response: PaginatedResponse<Refuel> = await refuelsApi.getAll({
-				page: currentPage,
-				size: pageSize,
-			});
-			setRefuels(response.items);
-			setPaginationData(response);
-		} catch (error) {
-			console.error("Error fetching refuels:", error);
-			toast.error("Failed to fetch refuel records");
-		} finally {
-			setLoading(false);
-		}
-	};
+	const fetchRefuels = useCallback(
+		async (resetPage = false) => {
+			try {
+				setLoading(true);
+				const page = resetPage ? 1 : currentPage;
+				if (resetPage) setCurrentPage(1);
+
+				const response: PaginatedResponse<Refuel> = await refuelsApi.getAll({
+					page,
+					size: pageSize,
+					search: searchTerm || undefined,
+				});
+				setRefuels(response.items);
+				setPaginationData(response);
+			} catch (error) {
+				console.error("Error fetching refuels:", error);
+				toast.error("Failed to fetch refuel records");
+			} finally {
+				setLoading(false);
+			}
+		},
+		[currentPage, pageSize, searchTerm],
+	);
+
+	// Debounced search function
+	const debouncedSearch = useCallback(
+		debounce(() => {
+			fetchRefuels(true);
+		}, 300),
+		[fetchRefuels],
+	);
 
 	useEffect(() => {
 		fetchRefuels();
 	}, [currentPage, pageSize]);
+
+	useEffect(() => {
+		debouncedSearch();
+		return () => {
+			debouncedSearch.cancel();
+		};
+	}, [searchTerm, debouncedSearch]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -89,10 +124,24 @@ export default function RefuelsPage() {
 	return (
 		<DashboardLayout title="Refuels" subtitle="Manage fuel records and track consumption">
 			<div className="space-y-6">
-				{/* Action buttons */}
-				<div className="flex justify-end">
+				{/* Search and Action buttons */}
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+					{/* Search input */}
+					<div className="relative flex-1 max-w-md">
+						<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+							<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+						</div>
+						<input
+							type="text"
+							placeholder="Search by vehicle brand, model or driver..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+						/>
+					</div>
+
 					{/* Add button */}
-					<button onClick={() => router.push("/refuels/add")} className="btn-primary">
+					<button onClick={() => router.push("/refuels/add")} className="btn-primary whitespace-nowrap">
 						<PlusIcon className="h-5 w-5 mr-2" />
 						Add Refuel
 					</button>

@@ -87,6 +87,7 @@ export const refuelsApi = {
     page?: number;
     size?: number;
     vehicle_id?: number;
+    search?: string;
   }): Promise<PaginatedResponse<Refuel>> => api.get('/refuels/', { params }).then(res => res.data),
   getById: (id: number): Promise<Refuel> => api.get(`/refuels/${id}/`).then(res => res.data),
   create: (data: CreateRefuelForm): Promise<Refuel> => api.post('/refuels/', data).then(res => res.data),
