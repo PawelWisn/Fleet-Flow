@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
 import {
 	PlusIcon,
 	BuildingOfficeIcon,
@@ -16,7 +17,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { companiesApi } from "@/services/api";
-import { Company } from "@/types";
+import { Company, PaginatedResponse } from "@/types";
 
 export default function CompaniesPage() {
 	const router = useRouter();
@@ -25,14 +26,21 @@ export default function CompaniesPage() {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(15);
+	const [paginationData, setPaginationData] = useState<PaginatedResponse<Company> | null>(null);
 
 	useEffect(() => {
 		const fetchCompanies = async () => {
 			try {
 				setIsLoading(true);
-				const response = await companiesApi.getAll();
+				const response = await companiesApi.getAll({
+					page: currentPage,
+					size: pageSize,
+				});
 				setCompanies(response.items);
 				setFilteredCompanies(response.items);
+				setPaginationData(response);
 				setError(null);
 			} catch (error) {
 				console.error("Error fetching companies:", error);
@@ -44,7 +52,7 @@ export default function CompaniesPage() {
 		};
 
 		fetchCompanies();
-	}, []);
+	}, [currentPage, pageSize]);
 
 	useEffect(() => {
 		const filtered = companies.filter(
@@ -55,6 +63,15 @@ export default function CompaniesPage() {
 		);
 		setFilteredCompanies(filtered);
 	}, [searchTerm, companies]);
+
+	const handlePageChange = (page: number) => {
+		setCurrentPage(page);
+	};
+
+	const handlePageSizeChange = (size: number) => {
+		setPageSize(size);
+		setCurrentPage(1);
+	};
 
 	const formatAddress = (company: Company) => {
 		const parts = [company.address1];
@@ -222,6 +239,18 @@ export default function CompaniesPage() {
 							</div>
 						))}
 					</div>
+				)}
+
+				{/* Pagination */}
+				{!isLoading && paginationData && paginationData.pages > 1 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={paginationData.pages}
+						totalItems={paginationData.total}
+						itemsPerPage={pageSize}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
+					/>
 				)}
 			</div>
 		</DashboardLayout>

@@ -16,8 +16,9 @@ import {
 import DashboardLayout from "@/components/DashboardLayout";
 import RoleGuard from "@/components/RoleGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
 import { usersApi } from "@/services/api";
-import { User } from "@/types";
+import { User, PaginatedResponse } from "@/types";
 
 const getRoleBadgeColor = (role: string) => {
 	switch (role) {
@@ -51,40 +52,35 @@ export default function UsersPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
-	const [totalItems, setTotalItems] = useState(0);
+	const [pageSize, setPageSize] = useState(15);
+	const [paginationData, setPaginationData] = useState<PaginatedResponse<User> | null>(null);
 	const [roleFilter, setRoleFilter] = useState("all");
-	const itemsPerPage = 12;
 
-	const fetchUsers = async (page = 1, search = "", role = "all") => {
+	const fetchUsers = async () => {
 		try {
 			setLoading(true);
-			const response = await usersApi.getAll();
+			const response = await usersApi.getAll({
+				page: currentPage,
+				size: pageSize,
+			});
 
-			// Client-side filtering since the API doesn't support these params yet
+			// Client-side filtering for search and role since backend might not support these filters yet
 			let filteredUsers = response.items || [];
 
-			if (search) {
+			if (searchTerm) {
 				filteredUsers = filteredUsers.filter(
 					(user) =>
-						user.name.toLowerCase().includes(search.toLowerCase()) ||
-						user.email.toLowerCase().includes(search.toLowerCase()),
+						user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						user.email.toLowerCase().includes(searchTerm.toLowerCase()),
 				);
 			}
 
-			if (role !== "all") {
-				filteredUsers = filteredUsers.filter((user) => user.role === role);
+			if (roleFilter !== "all") {
+				filteredUsers = filteredUsers.filter((user) => user.role === roleFilter);
 			}
 
-			// Simple client-side pagination
-			const startIndex = (page - 1) * itemsPerPage;
-			const endIndex = startIndex + itemsPerPage;
-			const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-			setUsers(paginatedUsers);
-			setTotalPages(Math.ceil(filteredUsers.length / itemsPerPage));
-			setTotalItems(filteredUsers.length);
-			setCurrentPage(page);
+			setUsers(filteredUsers);
+			setPaginationData(response);
 		} catch (error) {
 			console.error("Error fetching users:", error);
 			toast.error("Failed to load users");
@@ -94,23 +90,35 @@ export default function UsersPage() {
 	};
 
 	useEffect(() => {
-		fetchUsers(1, searchTerm, roleFilter);
-	}, []);
+		fetchUsers();
+	}, [currentPage, pageSize]);
+
+	useEffect(() => {
+		// Reset to first page when search term or role filter changes
+		if (currentPage !== 1) {
+			setCurrentPage(1);
+		} else {
+			fetchUsers();
+		}
+	}, [searchTerm, roleFilter]);
+
+	const handlePageChange = (page: number) => {
+		setCurrentPage(page);
+	};
+
+	const handlePageSizeChange = (size: number) => {
+		setPageSize(size);
+		setCurrentPage(1);
+	};
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
 		setCurrentPage(1);
-		fetchUsers(1, searchTerm, roleFilter);
 	};
 
 	const handleRoleFilter = (role: string) => {
 		setRoleFilter(role);
 		setCurrentPage(1);
-		fetchUsers(1, searchTerm, role);
-	};
-
-	const handlePageChange = (page: number) => {
-		fetchUsers(page, searchTerm, roleFilter);
 	};
 
 	const handleDelete = async (userId: number) => {
@@ -121,69 +129,11 @@ export default function UsersPage() {
 		try {
 			await usersApi.delete(userId);
 			toast.success("User deleted successfully!");
-			fetchUsers(currentPage, searchTerm, roleFilter);
+			fetchUsers();
 		} catch (error) {
 			console.error("Error deleting user:", error);
 			toast.error("Failed to delete user");
 		}
-	};
-
-	const renderPagination = () => {
-		if (totalPages <= 1) return null;
-
-		const pages = [];
-		const maxVisiblePages = 5;
-		let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-		let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-		if (endPage - startPage < maxVisiblePages - 1) {
-			startPage = Math.max(1, endPage - maxVisiblePages + 1);
-		}
-
-		for (let i = startPage; i <= endPage; i++) {
-			pages.push(
-				<button
-					key={i}
-					onClick={() => handlePageChange(i)}
-					className={`px-3 py-2 rounded-md text-sm font-medium ${
-						i === currentPage ? "bg-blue-500 text-white" : "text-gray-700 hover:bg-gray-100"
-					}`}
-				>
-					{i}
-				</button>,
-			);
-		}
-
-		return (
-			<div className="flex items-center justify-between px-4 py-3 sm:px-6">
-				<div className="flex justify-between flex-1 sm:hidden">
-					<button
-						onClick={() => handlePageChange(currentPage - 1)}
-						disabled={currentPage === 1}
-						className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-					>
-						Previous
-					</button>
-					<button
-						onClick={() => handlePageChange(currentPage + 1)}
-						disabled={currentPage === totalPages}
-						className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-					>
-						Next
-					</button>
-				</div>
-				<div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-					<div>
-						<p className="text-sm text-gray-700">
-							Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-							<span className="font-medium">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{" "}
-							<span className="font-medium">{totalItems}</span> results
-						</p>
-					</div>
-					<div className="flex space-x-1">{pages}</div>
-				</div>
-			</div>
-		);
 	};
 
 	return (
@@ -330,7 +280,18 @@ export default function UsersPage() {
 								))}
 							</div>
 						)}
-						{renderPagination()}
+
+						{/* Pagination */}
+						{!loading && paginationData && paginationData.pages > 1 && (
+							<Pagination
+								currentPage={currentPage}
+								totalPages={paginationData.pages}
+								totalItems={paginationData.total}
+								itemsPerPage={pageSize}
+								onPageChange={handlePageChange}
+								onPageSizeChange={handlePageSizeChange}
+							/>
+						)}
 					</div>
 				</div>
 			</RoleGuard>

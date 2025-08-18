@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { vehiclesApi } from "@/services/api";
-import { Vehicle } from "@/types";
+import { Vehicle, PaginatedResponse } from "@/types";
 import toast from "react-hot-toast";
 
 const availabilityColors = {
@@ -23,6 +24,9 @@ export default function VehiclesPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(15);
+	const [paginationData, setPaginationData] = useState<PaginatedResponse<Vehicle> | null>(null);
 	const router = useRouter();
 
 	// Fetch vehicles from API
@@ -31,8 +35,12 @@ export default function VehiclesPage() {
 			try {
 				setLoading(true);
 				setError(null);
-				const response = await vehiclesApi.getAll();
-				setVehicles(response.items || []); // Handle paginated response
+				const response = await vehiclesApi.getAll({
+					page: currentPage,
+					size: pageSize,
+				});
+				setVehicles(response.items || []);
+				setPaginationData(response);
 			} catch (err) {
 				console.error("Error fetching vehicles:", err);
 				setError("Failed to load vehicles. Please try again.");
@@ -43,7 +51,16 @@ export default function VehiclesPage() {
 		};
 
 		fetchVehicles();
-	}, []);
+	}, [currentPage, pageSize]);
+
+	const handlePageChange = (page: number) => {
+		setCurrentPage(page);
+	};
+
+	const handlePageSizeChange = (size: number) => {
+		setPageSize(size);
+		setCurrentPage(1); // Reset to first page when changing page size
+	};
 
 	const filteredVehicles = vehicles.filter((vehicle) => {
 		const matchesSearch =
@@ -220,6 +237,18 @@ export default function VehiclesPage() {
 							)}
 						</div>
 					</div>
+				)}
+
+				{/* Pagination */}
+				{!loading && paginationData && paginationData.pages > 1 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={paginationData.pages}
+						totalItems={paginationData.total}
+						itemsPerPage={pageSize}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
+					/>
 				)}
 			</div>
 		</DashboardLayout>

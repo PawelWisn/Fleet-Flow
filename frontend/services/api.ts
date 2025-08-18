@@ -24,7 +24,10 @@ import {
 
 // Users API
 export const usersApi = {
-  getAll: (): Promise<PaginatedResponse<User>> => api.get('/users/').then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+  }): Promise<PaginatedResponse<User>> => api.get('/users/', { params }).then(res => res.data),
   getById: (id: number): Promise<User> => api.get(`/users/${id}/`).then(res => res.data),
   getCurrentUser: (): Promise<User> => api.get('/users/me/').then(res => res.data),
   create: (data: CreateUserForm): Promise<User> => api.post('/users/', data).then(res => res.data),
@@ -34,17 +37,24 @@ export const usersApi = {
 
 // Vehicles API
 export const vehiclesApi = {
-  getAll: (): Promise<PaginatedResponse<Vehicle>> => api.get('/vehicles').then(res => res.data),
-  getById: (id: number): Promise<Vehicle> => api.get(`/vehicles/${id}`).then(res => res.data),
-  create: (data: CreateVehicleForm): Promise<Vehicle> => api.post('/vehicles', data).then(res => res.data),
-  update: (id: number, data: Partial<Vehicle>): Promise<Vehicle> => api.put(`/vehicles/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/vehicles/${id}`).then(res => res.data),
-  getAvailable: (): Promise<Vehicle[]> => api.get('/vehicles?availability=available').then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    company_id?: number;
+  }): Promise<PaginatedResponse<Vehicle>> => api.get('/vehicles/', { params }).then(res => res.data),
+  getById: (id: number): Promise<Vehicle> => api.get(`/vehicles/${id}/`).then(res => res.data),
+  create: (data: CreateVehicleForm): Promise<Vehicle> => api.post('/vehicles/', data).then(res => res.data),
+  update: (id: number, data: Partial<Vehicle>): Promise<Vehicle> => api.put(`/vehicles/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/vehicles/${id}/`).then(res => res.data),
+  getAvailable: (): Promise<Vehicle[]> => api.get('/vehicles/?availability=available').then(res => res.data),
 };
 
 // Companies API
 export const companiesApi = {
-  getAll: (): Promise<PaginatedResponse<Company>> => api.get('/companies').then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+  }): Promise<PaginatedResponse<Company>> => api.get('/companies/', { params }).then(res => res.data),
   getById: (id: number): Promise<Company> => api.get(`/companies/${id}/`).then(res => res.data),
   create: (data: CreateCompanyForm): Promise<Company> => api.post('/companies/', data).then(res => res.data),
   update: (id: number, data: CreateCompanyForm): Promise<Company> => api.put(`/companies/${id}/`, data).then(res => res.data),
@@ -71,7 +81,11 @@ export const reservationsApi = {
 
 // Refuels API
 export const refuelsApi = {
-  getAll: (): Promise<PaginatedResponse<Refuel>> => api.get('/refuels/').then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+  }): Promise<PaginatedResponse<Refuel>> => api.get('/refuels/', { params }).then(res => res.data),
   getById: (id: number): Promise<Refuel> => api.get(`/refuels/${id}/`).then(res => res.data),
   create: (data: CreateRefuelForm): Promise<Refuel> => api.post('/refuels/', data).then(res => res.data),
   update: (id: number, data: Partial<Refuel>): Promise<Refuel> => api.put(`/refuels/${id}/`, data).then(res => res.data),
@@ -81,22 +95,30 @@ export const refuelsApi = {
 
 // Events API
 export const eventsApi = {
-  getAll: (): Promise<PaginatedResponse<Event>> => api.get('/events').then(res => res.data),
-  getById: (id: number): Promise<Event> => api.get(`/events/${id}`).then(res => res.data),
-  create: (data: Partial<Event>): Promise<Event> => api.post('/events', data).then(res => res.data),
-  update: (id: number, data: Partial<Event>): Promise<Event> => api.put(`/events/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/events/${id}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Event[]> => api.get(`/events?vehicle_id=${vehicleId}`).then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+  }): Promise<PaginatedResponse<Event>> => api.get('/events/', { params }).then(res => res.data),
+  getById: (id: number): Promise<Event> => api.get(`/events/${id}/`).then(res => res.data),
+  create: (data: Partial<Event>): Promise<Event> => api.post('/events/', data).then(res => res.data),
+  update: (id: number, data: Partial<Event>): Promise<Event> => api.put(`/events/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/events/${id}/`).then(res => res.data),
+  getByVehicle: (vehicleId: number): Promise<Event[]> => api.get(`/events/?vehicle_id=${vehicleId}`).then(res => res.data),
 };
 
 // Insurance API
 export const insuranceApi = {
-  getAll: (): Promise<PaginatedResponse<Insurance>> => api.get('/insurances').then(res => res.data),
-  getById: (id: number): Promise<Insurance> => api.get(`/insurances/${id}`).then(res => res.data),
-  create: (data: Partial<Insurance>): Promise<Insurance> => api.post('/insurances', data).then(res => res.data),
-  update: (id: number, data: Partial<Insurance>): Promise<Insurance> => api.put(`/insurances/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/insurances/${id}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Insurance[]> => api.get(`/insurances?vehicle_id=${vehicleId}`).then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+  }): Promise<PaginatedResponse<Insurance>> => api.get('/insurances/', { params }).then(res => res.data),
+  getById: (id: number): Promise<Insurance> => api.get(`/insurances/${id}/`).then(res => res.data),
+  create: (data: Partial<Insurance>): Promise<Insurance> => api.post('/insurances/', data).then(res => res.data),
+  update: (id: number, data: Partial<Insurance>): Promise<Insurance> => api.put(`/insurances/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/insurances/${id}/`).then(res => res.data),
+  getByVehicle: (vehicleId: number): Promise<Insurance[]> => api.get(`/insurances/?vehicle_id=${vehicleId}`).then(res => res.data),
 };
 
 // Documents API
@@ -144,12 +166,16 @@ export const documentsApi = {
 
 // Comments API
 export const commentsApi = {
-  getAll: (): Promise<PaginatedResponse<Comment>> => api.get('/comments').then(res => res.data),
-  getById: (id: number): Promise<Comment> => api.get(`/comments/${id}`).then(res => res.data),
-  create: (data: Partial<Comment>): Promise<Comment> => api.post('/comments', data).then(res => res.data),
-  update: (id: number, data: Partial<Comment>): Promise<Comment> => api.put(`/comments/${id}`, data).then(res => res.data),
-  delete: (id: number): Promise<void> => api.delete(`/comments/${id}`).then(res => res.data),
-  getByVehicle: (vehicleId: number): Promise<Comment[]> => api.get(`/comments?vehicle_id=${vehicleId}`).then(res => res.data),
+  getAll: (params?: {
+    page?: number;
+    size?: number;
+    vehicle_id?: number;
+  }): Promise<PaginatedResponse<Comment>> => api.get('/comments/', { params }).then(res => res.data),
+  getById: (id: number): Promise<Comment> => api.get(`/comments/${id}/`).then(res => res.data),
+  create: (data: Partial<Comment>): Promise<Comment> => api.post('/comments/', data).then(res => res.data),
+  update: (id: number, data: Partial<Comment>): Promise<Comment> => api.put(`/comments/${id}/`, data).then(res => res.data),
+  delete: (id: number): Promise<void> => api.delete(`/comments/${id}/`).then(res => res.data),
+  getByVehicle: (vehicleId: number): Promise<Comment[]> => api.get(`/comments/?vehicle_id=${vehicleId}`).then(res => res.data),
 };
 
 // Reports API
