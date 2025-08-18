@@ -181,7 +181,7 @@ export default function DocumentDetailsPage() {
 									Vehicle
 								</dt>
 								<dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-									{document.vehicle_id ? `Vehicle ID: ${document.vehicle_id}` : "Not assigned"}
+									{document.vehicle ? document.vehicle.registration_number : "Not assigned"}
 								</dd>
 							</div>
 							<div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
@@ -190,7 +190,7 @@ export default function DocumentDetailsPage() {
 									User
 								</dt>
 								<dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-									{document.user_id ? `User ID: ${document.user_id}` : "Not assigned"}
+									{document.user ? document.user.name : "Not assigned"}
 								</dd>
 							</div>
 							{document.file_path && (
