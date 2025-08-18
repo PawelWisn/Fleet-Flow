@@ -106,15 +106,15 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 			if (isEdit && (document || documentData)) {
 				const docToUpdate = document || documentData;
 				if (docToUpdate) {
-					// For updates, we use the regular API call (no file upload for updates yet)
 					const updateData = {
 						title: formData.title,
 						description: formData.description,
 						file_type: formData.file_type,
 						vehicle_id: parseInt(formData.vehicle_id.toString()),
 						user_id: parseInt(formData.user_id.toString()),
+						...(selectedFile && { file: selectedFile }),
 					};
-					await documentsApi.update(docToUpdate.id, updateData as UpdateDocumentForm);
+					await documentsApi.update(docToUpdate.id, updateData as UpdateDocumentForm & { file?: File });
 					toast.success("Document updated successfully!");
 				}
 			} else {

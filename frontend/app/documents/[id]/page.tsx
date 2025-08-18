@@ -128,16 +128,15 @@ export default function DocumentDetailsPage() {
 						<p className="text-sm text-gray-500">Document Details</p>
 					</div>
 					<div className="flex space-x-3">
-						{document.file_path && (
-							<button
-								onClick={handleDownload}
-								disabled={downloading}
-								className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-							>
-								<ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-								{downloading ? "Downloading..." : "Download"}
-							</button>
-						)}
+						<button
+							onClick={handleDownload}
+							disabled={downloading || !document.file_path}
+							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+							title={!document.file_path ? "No file available for download" : "Download file"}
+						>
+							<ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+							{downloading ? "Downloading..." : "Download"}
+						</button>
 						<button
 							onClick={() => router.push(`/documents/${document.id}/edit`)}
 							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -193,37 +192,6 @@ export default function DocumentDetailsPage() {
 									{document.user ? document.user.name : "Not assigned"}
 								</dd>
 							</div>
-							{document.file_path && (
-								<div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-									<dt className="text-sm font-medium text-gray-500">File</dt>
-									<dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-										<div className="flex items-center justify-between">
-											<div>
-												<div className="font-mono text-sm">{document.file_path.split("/").pop()}</div>
-												{document.file_size && (
-													<div className="text-xs text-gray-500 mt-1">
-														Size: {(document.file_size / 1024).toFixed(2)} KB
-													</div>
-												)}
-											</div>
-											<button
-												onClick={handleDownload}
-												disabled={downloading}
-												className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-											>
-												<ArrowDownTrayIcon className="h-3 w-3 mr-1" />
-												{downloading ? "Downloading..." : "Download"}
-											</button>
-										</div>
-									</dd>
-								</div>
-							)}
-							{document.file_path && (
-								<div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-									<dt className="text-sm font-medium text-gray-500">File Path</dt>
-									<dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{document.file_path}</dd>
-								</div>
-							)}
 							<div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
 								<dt className="text-sm font-medium text-gray-500 flex items-center">
 									<CalendarIcon className="h-5 w-5 mr-2" />

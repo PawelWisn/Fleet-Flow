@@ -12,6 +12,7 @@ import {
 	EyeIcon,
 	PencilIcon,
 	TrashIcon,
+	ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -25,9 +26,11 @@ export default function DocumentsPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+	const [documentTypeFilter, setDocumentTypeFilter] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(15);
 	const [paginationData, setPaginationData] = useState<PaginatedResponse<Document> | null>(null);
+	const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
 	// Debounce search term
 	useEffect(() => {
@@ -38,20 +41,31 @@ export default function DocumentsPage() {
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
 
-	// Reset page when search term changes
+	// Reset page when search term or filter changes
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [debouncedSearchTerm]);
+	}, [debouncedSearchTerm, documentTypeFilter]);
 
 	useEffect(() => {
 		const fetchDocuments = async () => {
 			try {
 				setLoading(true);
-				const response = await documentsApi.getAll({
+
+				// Build params object conditionally
+				const params: any = {
 					page: currentPage,
 					size: pageSize,
-					search: debouncedSearchTerm || undefined,
-				});
+				};
+
+				if (debouncedSearchTerm) {
+					params.search = debouncedSearchTerm;
+				}
+
+				if (documentTypeFilter) {
+					params.document_type = documentTypeFilter;
+				}
+
+				const response = await documentsApi.getAll(params);
 				setDocuments(response.items || []);
 				setPaginationData(response);
 			} catch (error) {
@@ -63,7 +77,7 @@ export default function DocumentsPage() {
 		};
 
 		fetchDocuments();
-	}, [currentPage, pageSize, debouncedSearchTerm]);
+	}, [currentPage, pageSize, debouncedSearchTerm, documentTypeFilter]);
 
 	const handlePageChange = (page: number) => {
 		setCurrentPage(page);
@@ -93,6 +107,39 @@ export default function DocumentsPage() {
 		} catch (error) {
 			console.error("Error deleting document:", error);
 			toast.error("Failed to delete document");
+		}
+	};
+
+	const handleDownload = async (document: Document) => {
+		if (!document.file_path) {
+			toast.error("No file available for download");
+			return;
+		}
+
+		setDownloadingId(document.id);
+		try {
+			const blob = await documentsApi.download(document.id);
+
+			// Create a download link
+			const url = window.URL.createObjectURL(blob);
+			const link = window.document.createElement("a");
+			link.href = url;
+
+			// Get file extension from file_path
+			const fileExtension = document.file_path.split(".").pop() || "";
+			link.download = `${document.title}.${fileExtension}`;
+
+			window.document.body.appendChild(link);
+			link.click();
+			window.document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+
+			toast.success("File downloaded successfully!");
+		} catch (error) {
+			console.error("Error downloading file:", error);
+			toast.error("Failed to download file");
+		} finally {
+			setDownloadingId(null);
 		}
 	};
 
@@ -135,7 +182,7 @@ export default function DocumentsPage() {
 				{!loading && (
 					<div className="card">
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							<div className="sm:col-span-2 lg:col-span-3">
+							<div className="sm:col-span-1 lg:col-span-2">
 								<label htmlFor="search" className="block text-sm font-medium text-gray-700">
 									Search documents
 								</label>
@@ -151,6 +198,27 @@ export default function DocumentsPage() {
 										value={searchTerm}
 										onChange={(e) => setSearchTerm(e.target.value)}
 									/>
+								</div>
+							</div>
+							<div>
+								<label htmlFor="documentType" className="block text-sm font-medium text-gray-700">
+									Document Type
+								</label>
+								<div className="mt-1">
+									<select
+										id="documentType"
+										className="input-field"
+										value={documentTypeFilter}
+										onChange={(e) => setDocumentTypeFilter(e.target.value)}
+									>
+										<option value="">All Types</option>
+										<option value="registration">Registration</option>
+										<option value="insurance">Insurance</option>
+										<option value="maintenance">Maintenance</option>
+										<option value="inspection">Inspection</option>
+										<option value="manual">Manual</option>
+										<option value="other">Other</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -213,6 +281,16 @@ export default function DocumentsPage() {
 												</div>
 											</div>
 											<div className="flex items-center space-x-2">
+												{document.file_path && (
+													<button
+														onClick={() => handleDownload(document)}
+														disabled={downloadingId === document.id}
+														className="p-2 text-gray-400 hover:text-green-500 disabled:opacity-50"
+														title="Download file"
+													>
+														<ArrowDownTrayIcon className="h-4 w-4" />
+													</button>
+												)}
 												<button
 													onClick={() => router.push(`/documents/${document.id}`)}
 													className="p-2 text-gray-400 hover:text-blue-500"

@@ -27,10 +27,13 @@ async def list_documents(
     session: SessionDep,
     request_user: LoginReqDep,
     search: str = Query(None, description="Search by document title, description, vehicle plates, or user name"),
+    document_type: str = Query(None, description="Filter by document type"),
 ) -> Page[DocumentRead]:
     filters = get_filters({})
     qs = get_queryset(request_user).filter_by(**filters)
     qs = Document.with_search(qs, search)
+    qs = Document.with_type(qs, document_type)
+
     return paginate(session, qs)
 
 
@@ -97,16 +100,43 @@ async def update_document(
     session: SessionDep,
     request_user: LoginReqDep,
     document_id: int,
-    document: DocumentUpdate,
+    title: str = Form(None),
+    description: str = Form(None),
+    file_type: str = Form(None),
+    vehicle_id: int = Form(None),
+    user_id: int = Form(None),
+    file: Optional[UploadFile] = File(None),
 ) -> DocumentRead:
-    if document.vehicle_id:
-        validate_obj_reference(session, document, Vehicle, document.vehicle_id)
-    if document.user_id:
-        validate_obj_reference(session, document, User, document.user_id)
-
     qs = get_queryset(request_user)
     db_document = get_from_qs_or_404(session, qs, document_id)
-    db_document.sqlmodel_update(document)
+
+    if vehicle_id:
+        validate_obj_reference(session, {"vehicle_id": vehicle_id}, Vehicle, vehicle_id)
+    if user_id:
+        validate_obj_reference(session, {"user_id": user_id}, User, user_id)
+
+    if file and file.filename:
+        if db_document.file_path and document_file_manager.file_exists(db_document.file_path):
+            document_file_manager.delete_file(db_document.file_path)
+
+        try:
+            file_path, file_size = await document_file_manager.store_file(file)
+            db_document.file_path = file_path
+            db_document.file_size = file_size
+        except FileStorageError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    if title is not None:
+        db_document.title = title
+    if description is not None:
+        db_document.description = description
+    if file_type is not None:
+        db_document.file_type = file_type
+    if vehicle_id is not None:
+        db_document.vehicle_id = vehicle_id
+    if user_id is not None:
+        db_document.user_id = user_id
+
     session.commit()
     session.refresh(db_document)
     return db_document

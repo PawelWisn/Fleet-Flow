@@ -135,6 +135,7 @@ export const documentsApi = {
     vehicle_id?: number;
     user_id?: number;
     search?: string;
+    document_type?: string;
   }): Promise<PaginatedResponse<Document>> => api.get('/documents/', { params }).then(res => res.data),
 
   getById: (id: number): Promise<Document> => api.get(`/documents/${id}/`).then(res => res.data),
@@ -158,7 +159,25 @@ export const documentsApi = {
     }).then(res => res.data);
   },
 
-  update: (id: number, data: UpdateDocumentForm): Promise<Document> => api.put(`/documents/${id}/`, data).then(res => res.data),
+  update: (id: number, data: UpdateDocumentForm & { file?: File }): Promise<Document> => {
+    const formData = new FormData();
+
+    if (data.title !== undefined) formData.append('title', data.title);
+    if (data.description !== undefined) formData.append('description', data.description);
+    if (data.file_type !== undefined) formData.append('file_type', data.file_type);
+    if (data.vehicle_id !== undefined) formData.append('vehicle_id', data.vehicle_id.toString());
+    if (data.user_id !== undefined) formData.append('user_id', data.user_id.toString());
+
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+
+    return api.put(`/documents/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data);
+  },
 
   delete: (id: number): Promise<void> => api.delete(`/documents/${id}/`).then(res => res.data),
 

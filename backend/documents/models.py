@@ -50,7 +50,7 @@ class Document(DocumentBase, table=True):
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Document"]:
-        return select(cls)
+        return select(cls).order_by(Document.id.desc())
 
     @classmethod
     def with_search(cls, qs: Select["Document"], search: Optional[str]) -> Select["Document"]:
@@ -68,6 +68,13 @@ class Document(DocumentBase, table=True):
         return qs.where(
             or_(cls.title.ilike(search_pattern), cls.description.ilike(search_pattern), Vehicle.registration_number.ilike(search_pattern), User.name.ilike(search_pattern))
         )
+
+    @classmethod
+    def with_type(cls, qs: Select["Document"], document_type: Optional[str]) -> Select["Document"]:
+        if not document_type:
+            return qs
+
+        return qs.where(cls.file_type == document_type)
 
 
 class DocumentRead(DocumentBase):
@@ -118,4 +125,3 @@ class DocumentCreateWithFile(SQLModel):
     vehicle_id: int
     user_id: int
     file: Optional[bytes] = Field(default=None, exclude=True)  # File content as bytes
-    filename: Optional[str] = Field(default=None, exclude=True)  # Original filename
