@@ -79,6 +79,7 @@ class DocumentFileManager:
         try:
             self.validate_file(file)
 
+            await file.seek(0)
             file_content = await file.read()
             file_size = len(file_content)
 

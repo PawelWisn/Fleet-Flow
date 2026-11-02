@@ -13,6 +13,9 @@ import {
 	Bars3Icon,
 	XMarkIcon,
 	BeakerIcon,
+	WrenchScrewdriverIcon,
+	ShieldCheckIcon,
+	ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import TopBar from "@/components/TopBar";
@@ -21,6 +24,9 @@ const allNavigation = [
 	{ name: "Vehicles", href: "/vehicles", icon: TruckIcon, roles: ["worker", "manager", "admin"] },
 	{ name: "Reservations", href: "/reservations", icon: CalendarIcon, roles: ["worker", "manager", "admin"] },
 	{ name: "Refuels", href: "/refuels", icon: BeakerIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Events", href: "/events", icon: WrenchScrewdriverIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Insurances", href: "/insurances", icon: ShieldCheckIcon, roles: ["worker", "manager", "admin"] },
+	{ name: "Comments", href: "/comments", icon: ChatBubbleLeftRightIcon, roles: ["worker", "manager", "admin"] },
 	{ name: "Users", href: "/users", icon: UsersIcon, roles: ["manager", "admin"] },
 	{ name: "Companies", href: "/companies", icon: BuildingOfficeIcon, roles: ["manager", "admin"] },
 	{ name: "Documents", href: "/documents", icon: DocumentTextIcon, roles: ["worker", "manager", "admin"] },
@@ -61,14 +67,14 @@ function DashboardLayoutContent({ children, title, subtitle }: DashboardLayoutPr
 					<div className="absolute top-0 right-0 -mr-12 pt-2">
 						<button
 							type="button"
-							className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+							className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-white"
 							onClick={() => setSidebarOpen(false)}
 						>
 							<XMarkIcon className="h-6 w-6 text-white" />
 						</button>
 					</div>
 					<div className="h-0 flex-1 overflow-y-auto pt-5 pb-4">
-						<div className="flex flex-shrink-0 items-center px-4">
+						<div className="flex shrink-0 items-center px-4">
 							<Link href="/dashboard" className="hover:opacity-80 transition-opacity">
 								<h1 className="text-xl font-bold text-primary-600 cursor-pointer">FleetFlow</h1>
 							</Link>
@@ -93,7 +99,7 @@ function DashboardLayoutContent({ children, title, subtitle }: DashboardLayoutPr
 			<div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
 				<div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-200">
 					<div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
-						<div className="flex flex-shrink-0 items-center px-4">
+						<div className="flex shrink-0 items-center px-4">
 							<Link href="/dashboard" className="hover:opacity-80 transition-opacity">
 								<h1 className="text-2xl font-bold text-primary-600 cursor-pointer">FleetFlow</h1>
 							</Link>
@@ -120,7 +126,7 @@ function DashboardLayoutContent({ children, title, subtitle }: DashboardLayoutPr
 				<div className="sticky top-0 z-40 bg-white border-b border-gray-200 pl-1 pt-1 pb-1 sm:pl-3 sm:pt-3 sm:pb-3 lg:hidden">
 					<button
 						type="button"
-						className="-ml-0.5 -mt-0.5 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+						className="-ml-0.5 -mt-0.5 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-primary-500"
 						onClick={() => setSidebarOpen(true)}
 					>
 						<Bars3Icon className="h-6 w-6" />

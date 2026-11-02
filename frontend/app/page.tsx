@@ -63,7 +63,7 @@ export default function LoginPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-md w-full space-y-8">
 				{/* Header */}
 				<div className="text-center">
@@ -130,7 +130,7 @@ export default function LoginPage() {
 									id="remember-me"
 									name="remember-me"
 									type="checkbox"
-									className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+									className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded-sm"
 								/>
 								<label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
 									Remember me

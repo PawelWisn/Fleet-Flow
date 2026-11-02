@@ -63,7 +63,7 @@ export default function EditReservationPage() {
 						<p className="text-red-600 mt-2">{error}</p>
 						<button
 							onClick={() => router.push("/reservations")}
-							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded"
+							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded-sm"
 						>
 							Back to Reservations
 						</button>

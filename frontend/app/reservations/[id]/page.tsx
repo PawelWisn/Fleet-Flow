@@ -99,7 +99,7 @@ export default function ReservationDetailsPage() {
 						<p className="text-red-600 mt-2">{error}</p>
 						<button
 							onClick={() => router.push("/reservations")}
-							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded"
+							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded-sm"
 						>
 							Back to Reservations
 						</button>
@@ -124,7 +124,7 @@ export default function ReservationDetailsPage() {
 					<div className="flex space-x-3">
 						<button
 							onClick={() => router.push(`/reservations/${reservation.id}/edit`)}
-							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 						>
 							<PencilIcon className="h-4 w-4 mr-2" />
 							Edit
@@ -132,7 +132,7 @@ export default function ReservationDetailsPage() {
 						<button
 							onClick={handleDelete}
 							disabled={deleting}
-							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
 						>
 							{deleting ? <LoadingSpinner /> : <TrashIcon className="h-4 w-4 mr-2" />}
 							Delete
@@ -144,7 +144,7 @@ export default function ReservationDetailsPage() {
 					{/* Main Information */}
 					<div className="lg:col-span-2 space-y-6">
 						{/* Basic Details */}
-						<div className="bg-white shadow-sm rounded-lg p-6">
+						<div className="bg-white shadow-xs rounded-lg p-6">
 							<h2 className="text-lg font-semibold text-gray-900 mb-4">Reservation Information</h2>
 
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -162,7 +162,7 @@ export default function ReservationDetailsPage() {
 
 						{/* Vehicle Information */}
 						{reservation.vehicle && (
-							<div className="bg-white shadow-sm rounded-lg p-6">
+							<div className="bg-white shadow-xs rounded-lg p-6">
 								<h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
 									<TruckIcon className="h-5 w-5 mr-2" />
 									Vehicle Information
@@ -196,7 +196,7 @@ export default function ReservationDetailsPage() {
 
 						{/* User Information */}
 						{reservation.user && (
-							<div className="bg-white shadow-sm rounded-lg p-6">
+							<div className="bg-white shadow-xs rounded-lg p-6">
 								<h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
 									<UserIcon className="h-5 w-5 mr-2" />
 									User Information
@@ -220,7 +220,7 @@ export default function ReservationDetailsPage() {
 					{/* Sidebar */}
 					<div className="space-y-6">
 						{/* Timeline */}
-						<div className="bg-white shadow-sm rounded-lg p-6">
+						<div className="bg-white shadow-xs rounded-lg p-6">
 							<h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
 								<ClockIcon className="h-5 w-5 mr-2" />
 								Timeline
@@ -235,7 +235,7 @@ export default function ReservationDetailsPage() {
 						</div>
 
 						{/* Quick Actions */}
-						<div className="bg-white shadow-sm rounded-lg p-6">
+						<div className="bg-white shadow-xs rounded-lg p-6">
 							<h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
 
 							<div className="space-y-3">

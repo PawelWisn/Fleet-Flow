@@ -11,7 +11,7 @@ import {
 	ChartBarIcon,
 	CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-import { vehiclesApi } from "@/services/api";
+import { vehiclesApi, reservationsApi, insuranceApi } from "@/services/api";
 import { Vehicle } from "@/types";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api";
@@ -21,8 +21,8 @@ interface DashboardStats {
 	availableVehicles: number;
 	vehiclesInService: number;
 	vehiclesInUse: number;
-	upcomingMaintenances: number;
-	activeReservations: number;
+	upcomingReservations: number;
+	finishingInsurances: number;
 }
 
 export default function DashboardPage() {
@@ -31,8 +31,8 @@ export default function DashboardPage() {
 		availableVehicles: 0,
 		vehiclesInService: 0,
 		vehiclesInUse: 0,
-		upcomingMaintenances: 0,
-		activeReservations: 0,
+		upcomingReservations: 0,
+		finishingInsurances: 0,
 	});
 	const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -57,24 +57,24 @@ export default function DashboardPage() {
 			try {
 				setLoading(true);
 
-				// Fetch vehicles data
-				const vehiclesResponse = await vehiclesApi.getAll();
-				const vehiclesData = vehiclesResponse.items || [];
-				setVehicles(vehiclesData);
-
-				// Calculate stats from vehicles data
-				const totalVehicles = vehiclesData.length;
-				const availableVehicles = vehiclesData.filter((v) => v.availability === "available").length;
-				const vehiclesInService = vehiclesData.filter((v) => v.availability === "service").length;
-				const vehiclesInUse = vehiclesData.filter((v) => v.availability === "in use").length;
+				// Recent vehicles for the list, plus totals taken from the paginated responses
+				const [vehiclesResponse, available, service, inUse, upcomingReservations, finishingInsurances] = await Promise.all([
+					vehiclesApi.getAll(),
+					vehiclesApi.getAll({ size: 1, status: "available" }),
+					vehiclesApi.getAll({ size: 1, status: "service" }),
+					vehiclesApi.getAll({ size: 1, status: "in use" }),
+					reservationsApi.getUpcoming({ size: 1 }),
+					insuranceApi.getFinishing({ size: 1 }),
+				]);
+				setVehicles(vehiclesResponse.items || []);
 
 				setStats({
-					totalVehicles,
-					availableVehicles,
-					vehiclesInService,
-					vehiclesInUse,
-					upcomingMaintenances: Math.floor(totalVehicles * 0.15), // Mock data
-					activeReservations: Math.floor(totalVehicles * 0.3), // Mock data
+					totalVehicles: vehiclesResponse.total,
+					availableVehicles: available.total,
+					vehiclesInService: service.total,
+					vehiclesInUse: inUse.total,
+					upcomingReservations: upcomingReservations.total,
+					finishingInsurances: finishingInsurances.total,
 				});
 			} catch (error: any) {
 				console.error("Error fetching dashboard data:", error);
@@ -143,7 +143,7 @@ export default function DashboardPage() {
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<TruckIcon className="h-8 w-8 text-blue-600" />
 							</div>
 							<div className="ml-4">
@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
 									<div className="h-4 w-4 bg-green-600 rounded-full"></div>
 								</div>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
 
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
 									<div className="h-4 w-4 bg-blue-600 rounded-full"></div>
 								</div>
@@ -183,7 +183,7 @@ export default function DashboardPage() {
 
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<WrenchScrewdriverIcon className="h-8 w-8 text-yellow-600" />
 							</div>
 							<div className="ml-4">
@@ -195,24 +195,24 @@ export default function DashboardPage() {
 
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<CalendarDaysIcon className="h-8 w-8 text-purple-600" />
 							</div>
 							<div className="ml-4">
-								<p className="text-sm font-medium text-gray-600">Active Reservations</p>
-								<p className="text-2xl font-bold text-purple-600">{stats.activeReservations}</p>
+								<p className="text-sm font-medium text-gray-600">Upcoming Reservations</p>
+								<p className="text-2xl font-bold text-purple-600">{stats.upcomingReservations}</p>
 							</div>
 						</div>
 					</div>
 
 					<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<ChartBarIcon className="h-8 w-8 text-orange-600" />
 							</div>
 							<div className="ml-4">
-								<p className="text-sm font-medium text-gray-600">Upcoming Maintenances</p>
-								<p className="text-2xl font-bold text-orange-600">{stats.upcomingMaintenances}</p>
+								<p className="text-sm font-medium text-gray-600">Insurances Ending Soon</p>
+								<p className="text-2xl font-bold text-orange-600">{stats.finishingInsurances}</p>
 							</div>
 						</div>
 					</div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
 										</th>
 										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 											Status
-										</th>{" "}
+										</th>
 										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 											Company
 										</th>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
 												</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-												{vehicle.company?.address1 || "N/A"}
+												{vehicle.company?.name || "N/A"}
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 												{vehicle.kilometrage?.toLocaleString() || "N/A"} km

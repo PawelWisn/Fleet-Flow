@@ -38,8 +38,8 @@ class Refuel(RefuelBase, table=True):
         if user.is_admin:
             return qs
         if user.is_manager:
-            return qs.join(User).filter(User.company_id == user.company_id)
-        return qs.join(User).filter(cls.user_id == user.id)
+            return qs.filter(cls.user_id.in_(select(User.id).filter(User.company_id == user.company_id)))
+        return qs.filter(cls.user_id == user.id)
 
     @classmethod
     def with_search(cls, query: Select["Refuel"], search_term: str) -> Select["Refuel"]:

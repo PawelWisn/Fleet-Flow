@@ -3,7 +3,7 @@ from typing import Optional
 
 from commons import get_filters, get_from_qs_or_404, validate_obj_reference
 from dependencies import LoginReqDep, SessionDep
-from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -97,6 +97,7 @@ async def retrive_document(
 
 @router.put("/{document_id}/")
 async def update_document(
+    request: Request,
     session: SessionDep,
     request_user: LoginReqDep,
     document_id: int,
@@ -109,6 +110,9 @@ async def update_document(
 ) -> DocumentRead:
     qs = get_queryset(request_user)
     db_document = get_from_qs_or_404(session, qs, document_id)
+
+    if description is None and "description" in await request.form():
+        description = ""
 
     if vehicle_id:
         validate_obj_reference(session, {"vehicle_id": vehicle_id}, Vehicle, vehicle_id)

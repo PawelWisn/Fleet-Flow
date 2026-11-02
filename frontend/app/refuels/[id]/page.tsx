@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -75,8 +76,8 @@ export default function RefuelDetailsPage() {
 	};
 
 	const calculateEfficiency = () => {
-		if (!refuel || !refuel.amount || !refuel.cost) return null;
-		return (refuel.cost / refuel.amount).toFixed(2);
+		if (!refuel || !refuel.fuel_amount || !refuel.price) return null;
+		return (refuel.price / refuel.fuel_amount).toFixed(2);
 	};
 
 	if (loading) {
@@ -146,8 +147,8 @@ export default function RefuelDetailsPage() {
 								<dd className="mt-1 text-sm text-gray-900">{formatDate(refuel.date)}</dd>
 							</div>
 							<div>
-								<dt className="text-sm font-medium text-gray-500">Location</dt>
-								<dd className="mt-1 text-sm text-gray-900">{refuel.location}</dd>
+								<dt className="text-sm font-medium text-gray-500">Gas Station</dt>
+								<dd className="mt-1 text-sm text-gray-900">{refuel.gas_station}</dd>
 							</div>
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Driver</dt>
@@ -174,8 +175,8 @@ export default function RefuelDetailsPage() {
 								<dd className="mt-1 text-sm text-gray-900">{refuel.vehicle?.registration_number}</dd>
 							</div>
 							<div>
-								<dt className="text-sm font-medium text-gray-500">Odometer Reading</dt>
-								<dd className="mt-1 text-sm text-gray-900">{refuel.odometer.toLocaleString()} km</dd>
+								<dt className="text-sm font-medium text-gray-500">Kilometrage During Refuel</dt>
+								<dd className="mt-1 text-sm text-gray-900">{refuel.kilometrage_during_refuel.toLocaleString()} km</dd>
 							</div>
 						</dl>
 					</div>
@@ -186,11 +187,11 @@ export default function RefuelDetailsPage() {
 						<dl className="space-y-4">
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Amount</dt>
-								<dd className="mt-1 text-sm text-gray-900">{refuel.amount} Liters</dd>
+								<dd className="mt-1 text-sm text-gray-900">{refuel.fuel_amount} Liters</dd>
 							</div>
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Total Cost</dt>
-								<dd className="mt-1 text-sm text-gray-900">{formatCurrency(refuel.cost)}</dd>
+								<dd className="mt-1 text-sm text-gray-900">{formatCurrency(refuel.price)}</dd>
 							</div>
 							<div>
 								<dt className="text-sm font-medium text-gray-500">Price per Liter</dt>
@@ -199,32 +200,20 @@ export default function RefuelDetailsPage() {
 						</dl>
 					</div>
 
-					{/* Timestamps */}
+					{/* Related document */}
 					<div className="card">
-						<h3 className="text-lg font-semibold text-gray-900 mb-4">Record Information</h3>
+						<h3 className="text-lg font-semibold text-gray-900 mb-4">Related Document</h3>
 						<dl className="space-y-4">
 							<div>
-								<dt className="text-sm font-medium text-gray-500">Created</dt>
+								<dt className="text-sm font-medium text-gray-500">Document</dt>
 								<dd className="mt-1 text-sm text-gray-900">
-									{new Date(refuel.created_at).toLocaleString("en-US", {
-										year: "numeric",
-										month: "short",
-										day: "numeric",
-										hour: "2-digit",
-										minute: "2-digit",
-									})}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-								<dd className="mt-1 text-sm text-gray-900">
-									{new Date(refuel.updated_at).toLocaleString("en-US", {
-										year: "numeric",
-										month: "short",
-										day: "numeric",
-										hour: "2-digit",
-										minute: "2-digit",
-									})}
+									{refuel.document ? (
+										<Link href={`/documents/${refuel.document.id}`} className="text-primary-600 hover:underline">
+											{refuel.document.title}
+										</Link>
+									) : (
+										"-"
+									)}
 								</dd>
 							</div>
 						</dl>

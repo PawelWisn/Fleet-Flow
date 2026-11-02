@@ -21,7 +21,6 @@ export default function AddCompanyPage() {
 		} catch (error) {
 			console.error("Error creating company:", error);
 			toast.error("Failed to create company");
-			throw error;
 		} finally {
 			setIsLoading(false);
 		}

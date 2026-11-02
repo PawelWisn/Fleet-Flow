@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { DocumentTextIcon, TruckIcon, UserIcon } from "@heroicons/react/24/outline";
 import { documentsApi, vehiclesApi, usersApi } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { Document, CreateDocumentForm, UpdateDocumentForm, Vehicle, User } from "@/types";
+import { userLabel, vehicleLabel } from "./relationSearch";
 import LoadingSpinner from "./LoadingSpinner";
 import SearchableDropdown from "./SearchableDropdown";
 
@@ -30,13 +32,19 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 	const [loadingData, setLoadingData] = useState(true);
 	const [documentData, setDocumentData] = useState<Document | null>(document || null);
 
+	const { user: currentUser } = useAuth();
+	// Workers can only create documents as themselves
+	const canChooseUser = currentUser?.role !== "worker";
+
 	const [formData, setFormData] = useState({
 		title: "",
 		description: "",
 		file_type: "",
 		vehicle_id: "",
-		user_id: "",
+		user_id: currentUser?.id?.toString() || "",
 	});
+
+	const sourceDocument = document || documentData;
 
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -171,7 +179,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 	return (
 		<div className="max-w-2xl mx-auto">
 			<form onSubmit={handleSubmit} className="space-y-6">
-				<div className="bg-white shadow-sm rounded-lg p-6">
+				<div className="bg-white shadow-xs rounded-lg p-6">
 					<div className="flex items-center mb-6">
 						<DocumentTextIcon className="h-8 w-8 text-blue-600 mr-3" />
 						<div>
@@ -191,7 +199,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 								value={formData.title}
 								onChange={(e) => handleChange("title", e.target.value)}
 								placeholder="Document title"
-								className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+								className="w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								required
 							/>
 						</div>
@@ -202,7 +210,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 							<select
 								value={formData.file_type}
 								onChange={(e) => handleChange("file_type", e.target.value)}
-								className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+								className="w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								required
 							>
 								<option value="">Select document type</option>
@@ -217,6 +225,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 						{/* Vehicle Selection */}
 						<SearchableDropdown<Vehicle>
 							value={formData.vehicle_id}
+							valueLabel={sourceDocument?.vehicle ? vehicleLabel(sourceDocument.vehicle) : undefined}
 							onChange={(value) => handleChange("vehicle_id", value)}
 							onSearch={searchVehicles}
 							renderOption={(vehicle) => ({
@@ -230,19 +239,27 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 						/>
 
 						{/* User Selection */}
-						<SearchableDropdown<User>
-							value={formData.user_id}
-							onChange={(value) => handleChange("user_id", value)}
-							onSearch={searchUsers}
-							renderOption={(user) => ({
-								value: user.id.toString(),
-								label: `${user.name} (${user.email})`,
-							})}
-							placeholder="Select a user"
-							label="User"
-							icon={<UserIcon className="h-5 w-5" />}
-							required
-						/>
+						{canChooseUser ? (
+							<SearchableDropdown<User>
+								value={formData.user_id}
+								valueLabel={sourceDocument?.user ? userLabel(sourceDocument.user) : undefined}
+								onChange={(value) => handleChange("user_id", value)}
+								onSearch={searchUsers}
+								renderOption={(user) => ({
+									value: user.id.toString(),
+									label: `${user.name} (${user.email})`,
+								})}
+								placeholder="Select a user"
+								label="User"
+								icon={<UserIcon className="h-5 w-5" />}
+								required
+							/>
+						) : (
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">User</label>
+								<p className="py-2 text-sm text-gray-900">{currentUser?.name}</p>
+							</div>
+						)}
 					</div>
 
 					{/* Description */}
@@ -253,7 +270,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 							onChange={(e) => handleChange("description", e.target.value)}
 							rows={4}
 							placeholder="Document description..."
-							className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							className="w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							required
 						/>
 					</div>
@@ -273,7 +290,7 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 								<div className="flex text-sm text-gray-600">
 									<label
 										htmlFor="file-upload"
-										className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+										className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
 									>
 										<span>Upload a file</span>
 										<input
@@ -302,14 +319,14 @@ export default function DocumentForm({ document, documentId, isEdit = false }: D
 						<button
 							type="button"
 							onClick={() => router.push("/documents")}
-							className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
 							disabled={loading}
-							className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+							className="px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
 						>
 							{loading && <LoadingSpinner />}
 							{isEdit ? "Update Document" : "Create Document"}

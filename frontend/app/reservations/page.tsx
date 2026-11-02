@@ -14,8 +14,9 @@ import {
 } from "@heroicons/react/24/outline";
 import DashboardLayout from "@/components/DashboardLayout";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
 import { reservationsApi } from "@/services/api";
-import { Reservation } from "@/types";
+import { PaginatedResponse, Reservation } from "@/types";
 
 export default function ReservationsPage() {
 	const router = useRouter();
@@ -23,14 +24,20 @@ export default function ReservationsPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [mode, setMode] = useState<"all" | "upcoming">("all");
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(15);
+	const [paginationData, setPaginationData] = useState<PaginatedResponse<Reservation> | null>(null);
 
 	useEffect(() => {
 		const fetchReservations = async () => {
 			try {
 				setLoading(true);
 				setError(null);
-				const response = await reservationsApi.getAll();
+				const params = { page: currentPage, size: pageSize };
+				const response = mode === "upcoming" ? await reservationsApi.getUpcoming(params) : await reservationsApi.getAll(params);
 				setReservations(response.items || []);
+				setPaginationData(response);
 			} catch (err: any) {
 				console.error("Error fetching reservations:", err);
 				if (err.response?.status === 401) {
@@ -45,7 +52,7 @@ export default function ReservationsPage() {
 		};
 
 		fetchReservations();
-	}, [router]);
+	}, [router, mode, currentPage, pageSize]);
 
 	const filteredReservations = reservations.filter((reservation) => {
 		const matchesSearch =
@@ -92,7 +99,7 @@ export default function ReservationsPage() {
 						<p className="text-red-600 mt-2">{error}</p>
 						<button
 							onClick={() => window.location.reload()}
-							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded"
+							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded-sm"
 						>
 							Try Again
 						</button>
@@ -116,15 +123,36 @@ export default function ReservationsPage() {
 					</div>
 					<button
 						onClick={() => router.push("/reservations/add")}
-						className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+						className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-xs text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 					>
 						<PlusIcon className="h-4 w-4 mr-2" />
 						New Reservation
 					</button>
 				</div>
 
+				{/* Mode switch */}
+				<div className="inline-flex rounded-lg border border-gray-300 bg-white overflow-hidden">
+					{[
+						{ value: "all", label: "All" },
+						{ value: "upcoming", label: "Upcoming" },
+					].map((option) => (
+						<button
+							key={option.value}
+							onClick={() => {
+								setMode(option.value as "all" | "upcoming");
+								setCurrentPage(1);
+							}}
+							className={`px-4 py-2 text-sm font-medium transition-colors ${
+								mode === option.value ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-50"
+							}`}
+						>
+							{option.label}
+						</button>
+					))}
+				</div>
+
 				{/* Search */}
-				<div className="bg-white shadow-sm rounded-lg p-6">
+				<div className="bg-white shadow-xs rounded-lg p-6">
 					<div className="relative">
 						<MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
 						<input
@@ -132,7 +160,7 @@ export default function ReservationsPage() {
 							placeholder="Search by vehicle or user..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
-							className="pl-10 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							className="pl-10 w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 						/>
 					</div>
 
@@ -145,7 +173,7 @@ export default function ReservationsPage() {
 
 				{/* Reservations List */}
 				{filteredReservations.length === 0 ? (
-					<div className="bg-white shadow-sm rounded-lg p-12 text-center">
+					<div className="bg-white shadow-xs rounded-lg p-12 text-center">
 						<CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 						<h3 className="text-lg font-medium text-gray-900 mb-2">
 							{reservations.length === 0 ? "No reservations yet" : "No reservations found"}
@@ -158,7 +186,7 @@ export default function ReservationsPage() {
 						{reservations.length === 0 && (
 							<button
 								onClick={() => router.push("/reservations/add")}
-								className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+								className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-xs text-white bg-blue-600 hover:bg-blue-700"
 							>
 								<PlusIcon className="h-4 w-4 mr-2" />
 								Create First Reservation
@@ -166,7 +194,7 @@ export default function ReservationsPage() {
 						)}
 					</div>
 				) : (
-					<div className="bg-white shadow-sm rounded-lg overflow-hidden">
+					<div className="bg-white shadow-xs rounded-lg overflow-hidden">
 						<div className="grid grid-cols-1 divide-y divide-gray-200">
 							{filteredReservations.map((reservation) => (
 								<div key={reservation.id} className="p-6 hover:bg-gray-50">
@@ -209,14 +237,14 @@ export default function ReservationsPage() {
 										<div className="flex items-center space-x-2 ml-4">
 											<button
 												onClick={() => router.push(`/reservations/${reservation.id}`)}
-												className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+												className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-xs text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 											>
 												<EyeIcon className="h-4 w-4 mr-1" />
 												View
 											</button>
 											<button
 												onClick={() => router.push(`/reservations/${reservation.id}/edit`)}
-												className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+												className="inline-flex items-center px-3 py-2 border border-transparent shadow-xs text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 											>
 												<PencilIcon className="h-4 w-4 mr-1" />
 												Edit
@@ -227,6 +255,20 @@ export default function ReservationsPage() {
 							))}
 						</div>
 					</div>
+				)}
+
+				{paginationData && paginationData.pages > 1 && (
+					<Pagination
+						currentPage={currentPage}
+						totalPages={paginationData.pages}
+						totalItems={paginationData.total}
+						itemsPerPage={pageSize}
+						onPageChange={setCurrentPage}
+						onPageSizeChange={(size) => {
+							setPageSize(size);
+							setCurrentPage(1);
+						}}
+					/>
 				)}
 			</div>
 		</DashboardLayout>

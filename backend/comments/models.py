@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from database import SQLModel
+from sqlalchemy import or_
 from sqlalchemy.sql import Select
 from sqlmodel import Field, Relationship, select
 
@@ -25,11 +26,12 @@ class Comment(CommentBase, table=True):
 
     @classmethod
     def for_user(cls, user: "User") -> Select["Comment"]:
+        from users.models import User
+
         qs = select(cls)
         if not user.is_admin:
-            subordinates = user.get_subordinates()
-            suboridante_comments = select(cls).filter(cls.user_id.in_(subordinates))
-            qs = qs.filter(cls.user_id == user.id).union(suboridante_comments)
+            subordinate_ids = user.get_subordinates().with_only_columns(User.id)
+            qs = qs.filter(or_(cls.user_id == user.id, cls.user_id.in_(subordinate_ids)))
         return qs
 
 

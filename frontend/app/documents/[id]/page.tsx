@@ -131,7 +131,7 @@ export default function DocumentDetailsPage() {
 						<button
 							onClick={handleDownload}
 							disabled={downloading || !document.file_path}
-							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
 							title={!document.file_path ? "No file available for download" : "Download file"}
 						>
 							<ArrowDownTrayIcon className="h-4 w-4 mr-2" />
@@ -139,7 +139,7 @@ export default function DocumentDetailsPage() {
 						</button>
 						<button
 							onClick={() => router.push(`/documents/${document.id}/edit`)}
-							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 						>
 							<PencilIcon className="h-4 w-4 mr-2" />
 							Edit
@@ -147,7 +147,7 @@ export default function DocumentDetailsPage() {
 						<button
 							onClick={handleDelete}
 							disabled={deleting}
-							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
 						>
 							<TrashIcon className="h-4 w-4 mr-2" />
 							{deleting ? "Deleting..." : "Delete"}
@@ -156,7 +156,7 @@ export default function DocumentDetailsPage() {
 				</div>
 
 				{/* Document Info */}
-				<div className="bg-white shadow overflow-hidden sm:rounded-lg">
+				<div className="bg-white shadow-sm overflow-hidden sm:rounded-lg">
 					<div className="px-4 py-5 sm:px-6">
 						<h3 className="text-lg leading-6 font-medium text-gray-900">Document Information</h3>
 						<p className="mt-1 max-w-2xl text-sm text-gray-500">{document.description}</p>

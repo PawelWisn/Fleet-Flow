@@ -120,3 +120,14 @@ def logout(response: Response) -> Response:
 @router.get("/me/")
 def retrive_current_user(request_user: LoginReqDep) -> UserRead:
     return request_user
+
+
+# Must stay below /me/ so that "me" is not parsed as a user id
+@router.get("/{user_id}/")
+async def retrive_user(
+    session: SessionDep,
+    request_user: LoginReqDep,
+    user_id: int,
+) -> UserRead:
+    qs = get_queryset(request_user)
+    return get_from_qs_or_404(session, qs, user_id)

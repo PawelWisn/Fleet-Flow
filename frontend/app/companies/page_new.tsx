@@ -83,7 +83,7 @@ export default function CompaniesPage() {
 						<p className="text-red-600 mt-2">{error}</p>
 						<button
 							onClick={() => window.location.reload()}
-							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded"
+							className="mt-4 bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-4 rounded-sm"
 						>
 							Try Again
 						</button>
@@ -107,7 +107,7 @@ export default function CompaniesPage() {
 					</div>
 					<button
 						onClick={() => router.push("/companies/add")}
-						className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+						className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-xs text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 					>
 						<PlusIcon className="h-4 w-4 mr-2" />
 						Add Company
@@ -115,7 +115,7 @@ export default function CompaniesPage() {
 				</div>
 
 				{/* Search and Filters */}
-				<div className="bg-white shadow-sm rounded-lg p-6">
+				<div className="bg-white shadow-xs rounded-lg p-6">
 					<div className="flex flex-col sm:flex-row gap-4">
 						<div className="flex-1">
 							<div className="relative">
@@ -125,7 +125,7 @@ export default function CompaniesPage() {
 									placeholder="Search companies by name, city, or NIP..."
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-10 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+									className="pl-10 w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								/>
 							</div>
 						</div>
@@ -140,7 +140,7 @@ export default function CompaniesPage() {
 
 				{/* Companies List */}
 				{filteredCompanies.length === 0 ? (
-					<div className="bg-white shadow-sm rounded-lg p-12 text-center">
+					<div className="bg-white shadow-xs rounded-lg p-12 text-center">
 						<BuildingOfficeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 						<h3 className="text-lg font-medium text-gray-900 mb-2">
 							{searchTerm ? "No companies found" : "No companies yet"}
@@ -151,7 +151,7 @@ export default function CompaniesPage() {
 						{!searchTerm && (
 							<button
 								onClick={() => router.push("/companies/add")}
-								className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+								className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-xs text-white bg-blue-600 hover:bg-blue-700"
 							>
 								<PlusIcon className="h-4 w-4 mr-2" />
 								Add First Company
@@ -163,7 +163,7 @@ export default function CompaniesPage() {
 						{filteredCompanies.map((company) => (
 							<div
 								key={company.id}
-								className="bg-white shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+								className="bg-white shadow-xs rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
 							>
 								<div className="p-6">
 									<div className="flex justify-between items-start mb-4">
@@ -178,7 +178,7 @@ export default function CompaniesPage() {
 
 									<div className="space-y-3 mb-4">
 										<div className="flex items-start">
-											<MapPinIcon className="h-4 w-4 text-gray-400 mt-0.5 mr-2 flex-shrink-0" />
+											<MapPinIcon className="h-4 w-4 text-gray-400 mt-0.5 mr-2 shrink-0" />
 											<p className="text-sm text-gray-600 line-clamp-2">{formatAddress(company)}</p>
 										</div>
 									</div>
@@ -205,14 +205,14 @@ export default function CompaniesPage() {
 									<div className="flex space-x-2">
 										<button
 											onClick={() => router.push(`/companies/${company.id}`)}
-											className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+											className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-xs text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 										>
 											<EyeIcon className="h-4 w-4 mr-1" />
 											View
 										</button>
 										<button
 											onClick={() => router.push(`/companies/${company.id}/edit`)}
-											className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+											className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent shadow-xs text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 										>
 											<PencilIcon className="h-4 w-4 mr-1" />
 											Edit

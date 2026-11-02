@@ -46,7 +46,6 @@ export default function EditCompanyPage() {
 		} catch (error) {
 			console.error("Error updating company:", error);
 			toast.error("Failed to update company");
-			throw error;
 		} finally {
 			setIsLoading(false);
 		}

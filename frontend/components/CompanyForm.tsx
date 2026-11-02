@@ -22,12 +22,14 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 		city: company?.city || "",
 		country: company?.country || "",
 		nip: company?.nip || "",
+		// Carried over untouched when editing: the API's PUT would otherwise reset them to their defaults
+		...(company && { description: company.description, phone: company.phone, is_internal: company.is_internal }),
 	});
 
-	const [errors, setErrors] = useState<Partial<CreateCompanyForm>>({});
+	const [errors, setErrors] = useState<Partial<Record<keyof CreateCompanyForm, string>>>({});
 
 	const validateForm = (): boolean => {
-		const newErrors: Partial<CreateCompanyForm> = {};
+		const newErrors: Partial<Record<keyof CreateCompanyForm, string>> = {};
 
 		if (!formData.name.trim()) {
 			newErrors.name = "Company name is required";
@@ -89,7 +91,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 		}
 	};
 
-	const handleInputChange = (field: keyof CreateCompanyForm, value: string) => {
+	const handleInputChange = (field: Exclude<keyof CreateCompanyForm, "description" | "phone" | "is_internal">, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 		if (errors[field]) {
 			setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -98,7 +100,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 
 	return (
 		<div className="max-w-2xl mx-auto">
-			<div className="bg-white shadow-sm rounded-lg">
+			<div className="bg-white shadow-xs rounded-lg">
 				<div className="px-6 py-4 border-b border-gray-200">
 					<div className="flex items-center">
 						<BuildingOfficeIcon className="h-6 w-6 text-blue-600 mr-3" />
@@ -117,7 +119,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 							id="name"
 							value={formData.name}
 							onChange={(e) => handleInputChange("name", e.target.value)}
-							className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+							className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 								errors.name ? "border-red-300" : "border-gray-300"
 							}`}
 							placeholder="Enter company name"
@@ -136,7 +138,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 							id="nip"
 							value={formData.nip}
 							onChange={(e) => handleInputChange("nip", e.target.value.replace(/\D/g, "").slice(0, 10))}
-							className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+							className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 								errors.nip ? "border-red-300" : "border-gray-300"
 							}`}
 							placeholder="Enter 10-digit tax ID"
@@ -159,7 +161,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 								id="address1"
 								value={formData.address1}
 								onChange={(e) => handleInputChange("address1", e.target.value)}
-								className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+								className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 									errors.address1 ? "border-red-300" : "border-gray-300"
 								}`}
 								placeholder="Enter street address"
@@ -178,7 +180,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 								id="address2"
 								value={formData.address2}
 								onChange={(e) => handleInputChange("address2", e.target.value)}
-								className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+								className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 									errors.address2 ? "border-red-300" : "border-gray-300"
 								}`}
 								placeholder="Apartment, suite, etc. (optional)"
@@ -198,7 +200,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 									id="city"
 									value={formData.city}
 									onChange={(e) => handleInputChange("city", e.target.value)}
-									className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+									className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 										errors.city ? "border-red-300" : "border-gray-300"
 									}`}
 									placeholder="Enter city"
@@ -216,7 +218,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 									id="post_code"
 									value={formData.post_code}
 									onChange={(e) => handleInputChange("post_code", e.target.value)}
-									className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+									className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 										errors.post_code ? "border-red-300" : "border-gray-300"
 									}`}
 									placeholder="Enter post code"
@@ -236,7 +238,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 								id="country"
 								value={formData.country}
 								onChange={(e) => handleInputChange("country", e.target.value)}
-								className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+								className={`w-full px-3 py-2 border rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
 									errors.country ? "border-red-300" : "border-gray-300"
 								}`}
 								placeholder="Enter country"
@@ -251,7 +253,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 						<button
 							type="button"
 							onClick={() => router.back()}
-							className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-xs hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 							disabled={isLoading}
 						>
 							Cancel
@@ -259,7 +261,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 						<button
 							type="submit"
 							disabled={isLoading}
-							className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+							className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-xs hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{isLoading ? "Saving..." : company ? "Update Company" : "Create Company"}
 						</button>

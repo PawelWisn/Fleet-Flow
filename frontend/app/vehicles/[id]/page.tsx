@@ -231,6 +231,41 @@ export default function VehicleDetailsPage() {
 					</div>
 				</div>
 
+				{/* Related Records */}
+				<div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+					<h3 className="text-lg font-medium text-gray-900 mb-4">Related Records</h3>
+					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+						{[
+							{ label: "Documents", count: vehicle.documents?.length, href: `/documents` },
+							{ label: "Refuels", count: vehicle.refuels?.length, href: `/refuels` },
+							{ label: "Events", count: vehicle.events?.length, href: `/events?vehicle_id=${vehicle.id}` },
+							{ label: "Insurances", count: vehicle.insurrances?.length, href: `/insurances?vehicle_id=${vehicle.id}` },
+							{ label: "Reservations", count: vehicle.reservations?.length, href: `/reservations` },
+							{ label: "Comments", count: vehicle.comments?.length, href: `/comments?vehicle_id=${vehicle.id}` },
+						].map((item) => (
+							<button
+								key={item.label}
+								onClick={() => router.push(item.href)}
+								className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+							>
+								<p className="text-2xl font-bold text-gray-900">{item.count ?? 0}</p>
+								<p className="text-sm text-gray-600">{item.label}</p>
+							</button>
+						))}
+					</div>
+					<div className="mt-4 flex flex-wrap gap-3">
+						<button onClick={() => router.push(`/events/add?vehicle_id=${vehicle.id}`)} className="btn-secondary text-sm">
+							Add event
+						</button>
+						<button onClick={() => router.push(`/insurances/add?vehicle_id=${vehicle.id}`)} className="btn-secondary text-sm">
+							Add insurance
+						</button>
+						<button onClick={() => router.push(`/comments/add?vehicle_id=${vehicle.id}`)} className="btn-secondary text-sm">
+							Add comment
+						</button>
+					</div>
+				</div>
+
 				{/* Action Buttons */}
 				<div className="flex justify-start space-x-4">
 					<button onClick={() => router.push("/vehicles")} className="btn-secondary">

@@ -1,6 +1,6 @@
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v5.0.0
+      rev: v6.0.0
       hooks:
           - id: check-yaml
           - id: check-docstring-first
@@ -10,12 +10,12 @@ repos:
             exclude: ^frontend/.*\.json$
             args: ["--indent", "2", "--no-sort-keys"]
     - repo: https://github.com/psf/black
-      rev: 25.1.0
+      rev: 26.10.1
       hooks:
           - id: black
             args: ["-l", "180"]
     - repo: https://github.com/pycqa/isort
-      rev: 6.0.1
+      rev: 9.0.2
       hooks:
           - id: isort
             args: ["-m", "3", "--profile", "black", "-l", "180"]

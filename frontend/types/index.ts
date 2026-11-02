@@ -41,6 +41,12 @@ export interface Vehicle {
   tire_type: 'summer' | 'winter' | 'all-season';
   company_id?: number;
   company?: Company;
+  documents?: unknown[];
+  refuels?: unknown[];
+  events?: unknown[];
+  reservations?: unknown[];
+  insurrances?: unknown[];
+  comments?: unknown[];
 }
 
 export interface Reservation {
@@ -67,8 +73,6 @@ export interface Refuel {
   vehicle?: Vehicle;
   document?: Document;
   user?: User;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface RefuelStat {
@@ -78,30 +82,35 @@ export interface RefuelStat {
 
 export interface Event {
   id: number;
-  title: string;
-  description: string;
+  event_type: string;
   date: string;
-  type: string;
+  description: string;
+  price?: number | null;
   vehicle_id: number;
-  user_id: number;
+  document_id: number;
+  company_id: number;
   vehicle?: Vehicle;
-  user?: User;
-  created_at: string;
-  updated_at: string;
+  document?: Document | null;
+  company?: Company | null;
 }
+
+export type InsurranceType = 'OC' | 'AC' | 'OC/AC';
 
 export interface Insurance {
   id: number;
+  insurer: string;
   policy_number: string;
-  provider: string;
-  start_date: string;
-  end_date: string;
-  coverage_amount: number;
-  premium: number;
+  date_from: string;
+  date_to: string;
+  description: string;
+  price: number;
+  insurrance_type: InsurranceType;
   vehicle_id: number;
+  document_id: number;
+  company_id: number;
   vehicle?: Vehicle;
-  created_at: string;
-  updated_at: string;
+  document?: Document;
+  company?: Company | null;
 }
 
 export interface Document {
@@ -122,12 +131,11 @@ export interface Document {
 export interface Comment {
   id: number;
   content: string;
+  date: string;
   vehicle_id: number;
   user_id: number;
   vehicle?: Vehicle;
   user?: User;
-  created_at: string;
-  updated_at: string;
 }
 
 // API Response types
@@ -192,6 +200,10 @@ export interface CreateRefuelForm {
 
 export interface CreateCompanyForm {
   name: string;
+  /** Not editable in the form, but sent back on update: the backend resets omitted fields to their defaults */
+  description?: string;
+  phone?: string;
+  is_internal?: boolean;
   post_code: string;
   address1: string;
   address2: string;
@@ -232,4 +244,35 @@ export interface UpdateUserForm {
   password2?: string;
   role?: 'admin' | 'manager' | 'worker';
   company_id?: number;
+}
+
+export interface CreateEventForm {
+  event_type: string;
+  date: string;
+  description: string;
+  price?: number | null;
+  vehicle_id: number;
+  document_id: number;
+  company_id: number;
+}
+
+export interface CreateInsuranceForm {
+  insurer: string;
+  policy_number: string;
+  date_from: string;
+  date_to: string;
+  description: string;
+  price: number;
+  insurrance_type: InsurranceType;
+  vehicle_id: number;
+  document_id: number;
+  company_id: number;
+}
+
+export interface CreateCommentForm {
+  content: string;
+  /** Sent back unchanged on edit; the backend would otherwise reset it to "now" */
+  date?: string;
+  vehicle_id: number;
+  user_id: number;
 }

@@ -3,9 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { refuelsApi, vehiclesApi, usersApi, documentsApi } from "@/services/api";
+import { TruckIcon, UserIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
+import { refuelsApi } from "@/services/api";
+import { getErrorMessage } from "@/services/errors";
+import { useAuth } from "@/contexts/AuthContext";
 import { Refuel, Vehicle, User, Document, CreateRefuelForm } from "@/types";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import SearchableDropdown from "@/components/SearchableDropdown";
+import { searchDocuments, searchUsers, searchVehicles, userLabel, vehicleLabel } from "@/components/relationSearch";
 
 interface RefuelFormProps {
 	refuel?: Refuel;
@@ -26,10 +31,9 @@ interface RefuelFormErrors {
 export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
-	const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-	const [users, setUsers] = useState<User[]>([]);
-	const [documents, setDocuments] = useState<Document[]>([]);
-	const [loadingData, setLoadingData] = useState(true);
+	const { user: currentUser } = useAuth();
+	// Workers only see and create their own refuels
+	const canChooseUser = currentUser?.role !== "worker";
 
 	const [formData, setFormData] = useState<CreateRefuelForm>({
 		date: refuel?.date?.split("T")[0] || new Date().toISOString().split("T")[0],
@@ -39,34 +43,15 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 		gas_station: refuel?.gas_station || "",
 		vehicle_id: refuel?.vehicle_id || 0,
 		document_id: refuel?.document_id || 0,
-		user_id: refuel?.user_id || 0,
+		user_id: refuel?.user_id || currentUser?.id || 0,
+	});
+	const [labels, setLabels] = useState({
+		vehicle: refuel?.vehicle ? vehicleLabel(refuel.vehicle) : "",
+		user: refuel?.user ? userLabel(refuel.user) : currentUser && !refuel ? userLabel(currentUser) : "",
+		document: refuel?.document?.title || "",
 	});
 
 	const [errors, setErrors] = useState<RefuelFormErrors>({});
-
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				setLoadingData(true);
-				const [vehiclesResponse, usersResponse, documentsResponse] = await Promise.all([
-					vehiclesApi.getAll(),
-					usersApi.getAll(),
-					documentsApi.getAll({ page: 1, size: 100 }), // Fetch up to 100 documents
-				]);
-
-				setVehicles(vehiclesResponse.items);
-				setUsers(usersResponse.items);
-				setDocuments(documentsResponse.items);
-			} catch (error) {
-				console.error("Error loading data:", error);
-				toast.error("Failed to load form data");
-			} finally {
-				setLoadingData(false);
-			}
-		};
-
-		fetchData();
-	}, []);
 
 	const validateForm = (): boolean => {
 		const newErrors: RefuelFormErrors = {};
@@ -99,6 +84,10 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 			newErrors.user_id = "User is required";
 		}
 
+		if (!formData.document_id) {
+			newErrors.document_id = "Document is required";
+		}
+
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
@@ -124,11 +113,7 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 			router.push("/refuels");
 		} catch (error: any) {
 			console.error("Error saving refuel:", error);
-			if (error.response?.data?.detail) {
-				toast.error(error.response.data.detail);
-			} else {
-				toast.error(isEdit ? "Failed to update refuel record" : "Failed to create refuel record");
-			}
+			toast.error(getErrorMessage(error, isEdit ? "Failed to update refuel record" : "Failed to create refuel record"));
 		} finally {
 			setLoading(false);
 		}
@@ -140,14 +125,6 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 			setErrors((prev) => ({ ...prev, [field]: undefined }));
 		}
 	};
-
-	if (loadingData) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<LoadingSpinner />
-			</div>
-		);
-	}
 
 	return (
 		<div className="max-w-4xl mx-auto">
@@ -180,19 +157,20 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 
 							{/* Vehicle */}
 							<div>
-								<label className="label-required">Vehicle</label>
-								<select
-									value={formData.vehicle_id}
-									onChange={(e) => handleChange("vehicle_id", parseInt(e.target.value))}
-									className={`input ${errors.vehicle_id ? "border-red-500" : ""}`}
-								>
-									<option value="">Select a vehicle</option>
-									{vehicles.map((vehicle) => (
-										<option key={vehicle.id} value={vehicle.id}>
-											{vehicle.brand} {vehicle.model} - {vehicle.registration_number}
-										</option>
-									))}
-								</select>
+								<SearchableDropdown<Vehicle>
+									value={formData.vehicle_id ? String(formData.vehicle_id) : ""}
+									valueLabel={labels.vehicle}
+									onChange={(value, label) => {
+										handleChange("vehicle_id", parseInt(value));
+										setLabels((prev) => ({ ...prev, vehicle: label }));
+									}}
+									onSearch={searchVehicles}
+									renderOption={(vehicle) => ({ value: vehicle.id.toString(), label: vehicleLabel(vehicle) })}
+									placeholder="Select a vehicle"
+									label="Vehicle"
+									icon={<TruckIcon className="h-5 w-5" />}
+									required
+								/>
 								{errors.vehicle_id && <p className="error">{errors.vehicle_id}</p>}
 							</div>
 						</div>
@@ -284,19 +262,27 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 							{/* Driver */}
 							<div>
-								<label className="label-required">Driver</label>
-								<select
-									value={formData.user_id}
-									onChange={(e) => handleChange("user_id", parseInt(e.target.value))}
-									className={`input ${errors.user_id ? "border-red-500" : ""}`}
-								>
-									<option value="">Select a driver</option>
-									{users.map((user) => (
-										<option key={user.id} value={user.id}>
-											{user.name} ({user.email})
-										</option>
-									))}
-								</select>
+								{canChooseUser ? (
+									<SearchableDropdown<User>
+										value={formData.user_id ? String(formData.user_id) : ""}
+										valueLabel={labels.user}
+										onChange={(value, label) => {
+											handleChange("user_id", parseInt(value));
+											setLabels((prev) => ({ ...prev, user: label }));
+										}}
+										onSearch={searchUsers}
+										renderOption={(user) => ({ value: user.id.toString(), label: userLabel(user) })}
+										placeholder="Select a driver"
+										label="Driver"
+										icon={<UserIcon className="h-5 w-5" />}
+										required
+									/>
+								) : (
+									<>
+										<label className="block text-sm font-medium text-gray-700 mb-2">Driver</label>
+										<p className="py-2 text-sm text-gray-900">{labels.user || currentUser?.name}</p>
+									</>
+								)}
 								{errors.user_id && <p className="error">{errors.user_id}</p>}
 							</div>
 
@@ -315,28 +301,27 @@ export default function RefuelForm({ refuel, isEdit = false }: RefuelFormProps) 
 						</div>
 					</div>
 
-					{/* Optional Information */}
+					{/* Related document */}
 					<div className="form-group">
-						<h3 className="text-lg font-medium text-gray-900 mb-4">Optional Information</h3>
+						<h3 className="text-lg font-medium text-gray-900 mb-4">Related Document</h3>
 						<div className="grid grid-cols-1 gap-6">
-							{/* Document */}
 							<div>
-								<label className="label-optional">Related Document</label>
-								<select
-									value={formData.document_id || ""}
-									onChange={(e) => handleChange("document_id", parseInt(e.target.value) || 0)}
-									className="input"
-								>
-									<option value="">No document selected</option>
-									{documents.map((document) => (
-										<option key={document.id} value={document.id}>
-											{document.title}
-										</option>
-									))}
-								</select>
-								<p className="text-sm text-gray-500 mt-1">
-									Optionally link this refuel record to a relevant document (receipt, invoice, etc.)
-								</p>
+								<SearchableDropdown<Document>
+									value={formData.document_id ? String(formData.document_id) : ""}
+									valueLabel={labels.document}
+									onChange={(value, label) => {
+										handleChange("document_id", parseInt(value));
+										setLabels((prev) => ({ ...prev, document: label }));
+									}}
+									onSearch={searchDocuments}
+									renderOption={(document) => ({ value: document.id.toString(), label: document.title })}
+									placeholder="Select a document"
+									label="Document"
+									icon={<DocumentTextIcon className="h-5 w-5" />}
+									required
+								/>
+								{errors.document_id && <p className="error">{errors.document_id}</p>}
+								<p className="text-sm text-gray-500 mt-1">Link this refuel record to a relevant document (receipt, invoice, etc.)</p>
 							</div>
 						</div>
 					</div>

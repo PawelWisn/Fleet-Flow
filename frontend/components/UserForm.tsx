@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { UserIcon, BuildingOfficeIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { usersApi, companiesApi } from "@/services/api";
+import { getErrorMessage } from "@/services/errors";
 import { User, CreateUserForm, UpdateUserForm, Company } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "./LoadingSpinner";
@@ -188,6 +189,9 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 				}
 			} else if (error.response?.status === 403) {
 				toast.error("You don't have permission to perform this action");
+			} else if (error.response?.status === 422) {
+				// e.g. "This email has already been taken." or a password rule the client-side check does not cover
+				toast.error(getErrorMessage(error, "Invalid user data. Please check your inputs."));
 			} else {
 				toast.error(`Failed to ${isEdit ? "update" : "create"} user`);
 			}
@@ -215,7 +219,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 	return (
 		<div className="max-w-2xl mx-auto">
 			<form onSubmit={handleSubmit} className="space-y-6">
-				<div className="bg-white shadow-sm rounded-lg p-6">
+				<div className="bg-white shadow-xs rounded-lg p-6">
 					<div className="flex items-center mb-6">
 						<UserIcon className="h-8 w-8 text-blue-600 mr-3" />
 						<div>
@@ -235,7 +239,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 								value={formData.name}
 								onChange={(e) => handleChange("name", e.target.value)}
 								placeholder="Enter full name"
-								className={`w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+								className={`w-full border rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 									errors.name ? "border-red-300" : "border-gray-300"
 								}`}
 								required
@@ -251,7 +255,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 								value={formData.email}
 								onChange={(e) => handleChange("email", e.target.value)}
 								placeholder="user@example.com"
-								className={`w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+								className={`w-full border rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 									errors.email ? "border-red-300" : "border-gray-300"
 								}`}
 								required
@@ -271,7 +275,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 									value={formData.password1}
 									onChange={(e) => handleChange("password1", e.target.value)}
 									placeholder={isEdit ? "New password (optional)" : "Enter password"}
-									className={`w-full border rounded-md shadow-sm py-2 px-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+									className={`w-full border rounded-md shadow-xs py-2 px-3 pr-10 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 										errors.password1 ? "border-red-300" : "border-gray-300"
 									}`}
 									required={!isEdit}
@@ -300,7 +304,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 									value={formData.password2}
 									onChange={(e) => handleChange("password2", e.target.value)}
 									placeholder={isEdit ? "Confirm new password" : "Confirm password"}
-									className={`w-full border rounded-md shadow-sm py-2 px-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+									className={`w-full border rounded-md shadow-xs py-2 px-3 pr-10 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 										errors.password2 ? "border-red-300" : "border-gray-300"
 									}`}
 									required={!isEdit || !!formData.password1}
@@ -326,7 +330,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 							<select
 								value={formData.role}
 								onChange={(e) => handleChange("role", e.target.value)}
-								className={`w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+								className={`w-full border rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 									errors.role ? "border-red-300" : "border-gray-300"
 								}`}
 								required
@@ -348,7 +352,7 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 								<select
 									value={formData.company_id}
 									onChange={(e) => handleChange("company_id", e.target.value)}
-									className="pl-10 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+									className="pl-10 w-full border border-gray-300 rounded-md shadow-xs py-2 px-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 								>
 									<option value="">Select a company (optional)</option>
 									{companies.map((company) => (
@@ -386,14 +390,14 @@ export default function UserForm({ user, userId, isEdit = false }: UserFormProps
 						<button
 							type="button"
 							onClick={() => router.push("/users")}
-							className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="px-4 py-2 border border-gray-300 rounded-md shadow-xs text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 						>
 							Cancel
 						</button>
 						<button
 							type="submit"
 							disabled={loading}
-							className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+							className="px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
 						>
 							{loading && <LoadingSpinner />}
 							{isEdit ? "Update User" : "Create User"}

@@ -36,7 +36,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 				<div className="min-h-screen flex items-center justify-center bg-gray-50">
 					<div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
 						<div className="flex items-center">
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								<svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path
 										strokeLinecap="round"

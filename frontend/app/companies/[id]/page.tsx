@@ -95,7 +95,7 @@ export default function CompanyDetailsPage() {
 		<DashboardLayout>
 			<div className="space-y-6">
 				{/* Header */}
-				<div className="bg-white shadow-sm rounded-lg">
+				<div className="bg-white shadow-xs rounded-lg">
 					<div className="px-6 py-4 border-b border-gray-200">
 						<div className="flex justify-between items-start">
 							<div className="flex items-center">
@@ -111,7 +111,7 @@ export default function CompanyDetailsPage() {
 							<div className="flex space-x-2">
 								<button
 									onClick={() => router.push(`/companies/${companyId}/edit`)}
-									className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+									className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-xs text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 								>
 									<PencilIcon className="h-4 w-4 mr-1" />
 									Edit
@@ -119,7 +119,7 @@ export default function CompanyDetailsPage() {
 								<button
 									onClick={handleDelete}
 									disabled={isDeleting}
-									className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+									className="inline-flex items-center px-3 py-2 border border-transparent shadow-xs text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									<TrashIcon className="h-4 w-4 mr-1" />
 									{isDeleting ? "Deleting..." : "Delete"}
@@ -189,7 +189,7 @@ export default function CompanyDetailsPage() {
 				</div>
 
 				{/* Quick Actions */}
-				<div className="bg-white shadow-sm rounded-lg p-6">
+				<div className="bg-white shadow-xs rounded-lg p-6">
 					<h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 						<button

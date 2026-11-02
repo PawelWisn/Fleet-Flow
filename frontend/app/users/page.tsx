@@ -13,6 +13,7 @@ import {
 	TrashIcon,
 	ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
+import CanModifyUser from "@/components/CanModifyUser";
 import DashboardLayout from "@/components/DashboardLayout";
 import RoleGuard from "@/components/RoleGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -139,7 +140,7 @@ export default function UsersPage() {
 						</div>
 						<button
 							onClick={() => router.push("/users/add")}
-							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+							className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 						>
 							<PlusIcon className="h-4 w-4 mr-2" />
 							Add User
@@ -173,7 +174,7 @@ export default function UsersPage() {
 					</div>
 
 					{/* Users Grid */}
-					<div className="bg-white shadow overflow-hidden sm:rounded-md">
+					<div className="bg-white shadow-sm overflow-hidden sm:rounded-md">
 						{loading ? (
 							<div className="flex justify-center items-center py-12">
 								<LoadingSpinner />
@@ -186,7 +187,7 @@ export default function UsersPage() {
 								<div className="mt-6">
 									<button
 										onClick={() => router.push("/users/add")}
-										className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+										className="inline-flex items-center px-4 py-2 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 									>
 										<PlusIcon className="h-4 w-4 mr-2" />
 										Add User
@@ -201,7 +202,7 @@ export default function UsersPage() {
 										className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
 									>
 										<div className="flex items-center space-x-3 mb-4">
-											<div className="flex-shrink-0">
+											<div className="shrink-0">
 												<div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
 													<UserIcon className="h-6 w-6 text-gray-600" />
 												</div>
@@ -242,24 +243,26 @@ export default function UsersPage() {
 										<div className="mt-4 flex space-x-2">
 											<button
 												onClick={() => router.push(`/users/${user.id}`)}
-												className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+												className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-xs text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 											>
 												<EyeIcon className="h-4 w-4 mr-1" />
 												View
 											</button>
+											<CanModifyUser userId={user.id}>
 											<button
 												onClick={() => router.push(`/users/${user.id}/edit`)}
-												className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+												className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
 											>
 												<PencilIcon className="h-4 w-4 mr-1" />
 												Edit
 											</button>
 											<button
 												onClick={() => handleDelete(user.id)}
-												className="inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+												className="inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
 											>
 												<TrashIcon className="h-4 w-4" />
 											</button>
+											</CanModifyUser>
 										</div>
 									</div>
 								))}

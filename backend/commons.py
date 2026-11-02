@@ -70,7 +70,7 @@ def raise_perm_error(input: dict = None, ctx: dict = None) -> None:
 
 
 def raise_validation_error(msg: str, input: dict = None, ctx: dict = None) -> None:
-    raise_http_error(status.HTTP_422_UNPROCESSABLE_ENTITY, msg, input, ctx)
+    raise_http_error(status.HTTP_422_UNPROCESSABLE_CONTENT, msg, input, ctx)
 
 
 def validate_obj_reference(session: Session, referencing_obj: T, referenced_model: Type[T], referenced_obj_id: int | None) -> None:

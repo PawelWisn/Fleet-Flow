@@ -73,7 +73,7 @@ export default function TopBar({ title, subtitle }: TopBarProps) {
 	}
 
 	return (
-		<div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+		<div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-xs">
 			<div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 h-16">
 				{/* Left side - page title or default */}
 				<div className="flex items-center">
@@ -106,7 +106,7 @@ export default function TopBar({ title, subtitle }: TopBarProps) {
 					<div className="relative">
 						<button
 							type="button"
-							className="flex items-center space-x-2 p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+							className="flex items-center space-x-2 p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-primary-500"
 							onClick={() => setDropdownOpen(!dropdownOpen)}
 						>
 							<UserCircleIcon className="h-8 w-8" />

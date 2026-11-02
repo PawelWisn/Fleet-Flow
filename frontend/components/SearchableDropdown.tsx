@@ -6,13 +6,15 @@ import LoadingSpinner from "./LoadingSpinner";
 
 interface SearchableDropdownProps<T> {
 	value: string;
-	onChange: (value: string) => void;
+	onChange: (value: string, label: string) => void;
 	onSearch: (searchTerm: string, page: number) => Promise<{ items: T[]; hasMore: boolean }>;
 	renderOption: (item: T) => { value: string; label: string };
 	placeholder: string;
 	label: string;
 	icon?: React.ReactNode;
 	required?: boolean;
+	/** Known label for the current value, used when the item may not be in the first page of search results */
+	valueLabel?: string;
 }
 
 export default function SearchableDropdown<T>({
@@ -24,6 +26,7 @@ export default function SearchableDropdown<T>({
 	label,
 	icon,
 	required = false,
+	valueLabel,
 }: SearchableDropdownProps<T>) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [searchTerm, setSearchTerm] = useState("");
@@ -32,7 +35,8 @@ export default function SearchableDropdown<T>({
 	const [loading, setLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
 	const [page, setPage] = useState(1);
-	const [selectedLabel, setSelectedLabel] = useState("");
+	const [selectedLabel, setSelectedLabel] = useState(valueLabel || "");
+	const lookedUpValue = useRef<string | null>(null);
 
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
@@ -55,6 +59,13 @@ export default function SearchableDropdown<T>({
 		}
 	}, [debouncedSearchTerm, isOpen]);
 
+	// Use the label provided by the parent whenever it changes
+	useEffect(() => {
+		if (valueLabel) {
+			setSelectedLabel(valueLabel);
+		}
+	}, [valueLabel]);
+
 	// Update selected label when value changes
 	useEffect(() => {
 		if (value && items.length > 0) {
@@ -69,8 +80,9 @@ export default function SearchableDropdown<T>({
 
 	// Load initial item when value is set but not in current items
 	useEffect(() => {
-		if (value && !selectedLabel && !loading) {
-			// If we have a value but no label, search for it specifically
+		if (value && !selectedLabel && !loading && lookedUpValue.current !== value) {
+			// If we have a value but no label, try the first page once (avoids refetching forever when the item is not on it)
+			lookedUpValue.current = value;
 			fetchItems(1, true);
 		}
 	}, [value, selectedLabel, loading]);
@@ -117,7 +129,7 @@ export default function SearchableDropdown<T>({
 
 	const handleSelect = (item: T) => {
 		const option = renderOption(item);
-		onChange(option.value);
+		onChange(option.value, option.label);
 		setSelectedLabel(option.label);
 		setIsOpen(false);
 		setSearchTerm("");
@@ -142,7 +154,7 @@ export default function SearchableDropdown<T>({
 					onClick={handleOpen}
 					className={`${
 						icon ? "pl-10" : "pl-3"
-					} pr-10 w-full border border-gray-300 rounded-md shadow-sm py-2 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+					} pr-10 w-full border border-gray-300 rounded-md shadow-xs py-2 text-left bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
 						!selectedLabel ? "text-gray-500" : "text-gray-900"
 					}`}
 				>
@@ -164,7 +176,7 @@ export default function SearchableDropdown<T>({
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								placeholder="Search..."
-								className="pl-9 pr-3 py-2 w-full border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+								className="pl-9 pr-3 py-2 w-full border border-gray-300 rounded-md text-sm focus:outline-hidden focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
 							/>
 						</div>
 					</div>
@@ -183,7 +195,7 @@ export default function SearchableDropdown<T>({
 										key={`${option.value}-${index}`}
 										type="button"
 										onClick={() => handleSelect(item)}
-										className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:outline-none focus:bg-gray-100 ${
+										className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 ${
 											option.value === value ? "bg-blue-50 text-blue-700" : "text-gray-900"
 										}`}
 									>

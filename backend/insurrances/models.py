@@ -46,7 +46,7 @@ class Insurrance(InsurranceBase, table=True):
         from vehicles.models import Vehicle
 
         if not user.is_admin:
-            return select(cls).join(Vehicle).filter(Vehicle.company_id == user.company_id)
+            return select(cls).filter(cls.vehicle_id.in_(select(Vehicle.id).filter(Vehicle.company_id == user.company_id)))
         return select(cls)
 
     @classmethod
